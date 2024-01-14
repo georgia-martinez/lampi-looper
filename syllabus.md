@@ -1,11 +1,11 @@
 # Introduction to Connected Devices
 
-_Revised January 17, 2023_
+_Revised January 14, 2024_
 
-* CWRU - ECSE / CSDS 377
+* CWRU - ECSE / CSDS 377 + ECSE / CSDS 600
 * CSU - CIS 493 / EEC 492
 
-## Spring 2023
+## Spring 2024
 
 ### Instructor
 
@@ -14,7 +14,7 @@ _Revised January 17, 2023_
 ### Course Logistics
 
 * Lecture Time:  Monday & Wednesday 4:50-6:05
-* Location: Nord 356 (Zoom to start the semester)
+* Location: Nord 356 
 * TA: **Helio Dong** _lxd262@case.edu_
   * TA Office Hours In-Person (tentative): 
   * Tuesday 4:00-5:00 PM
@@ -58,7 +58,7 @@ and a few Python resources that might be useful:
 
 ## Course Content and Requirements
 
-Lectures will be given twice per week.  Students are expected to attend all lectures and participate in discussions.  Students will be responsible for all material covered in class.  
+Lectures will be given twice per week.  Students are expected to attend all lectures and participate in discussions.  Students will be responsible for all material covered in class and in the Courseware.  
 
 We will be covering a wide variety of technologies, including Embedded Systems, Cloud (using Amazon Web Services - AWS), Bluetooth Low Energy (aka Bluetooth Smart) and native mobile applications, as well as non-functional systems topics including analytics, load testing, security, firmware update, etc.
 
@@ -94,7 +94,7 @@ Students will be paired for each assignment.
 
 * _All work turned in should be that of your own pair._
 * Study groups are encouraged, but, again,
-* _All work turned in should be your own pair._
+* _Again, All work turned in should be that of your own pair._
 * Neither copy another student's work nor allow your work to be copied, other than your pair.
 * The instructor has zero tolerance for plagiarism.
 * Any malicious use or intentional misuse of the LAMPI kits, development servers or other resources will be dealt with most harshly.
@@ -111,36 +111,37 @@ ESS Disability Resources is committed to assisting all CWRU students with disabi
 
 ## Tentative Lecture Schedule
 
-First Day of Class will be January 18th.
+First Day of Class will be January 17th.
 
 Topic (Chapter) Start Dates:
 
-1. Introduction to Connected Devices (Internet of Things) and LAMPi (1/18)
-1. User Experience, User Interfaces, and Touchscreens (Kivy) (1/23)
-1. Publish/Subscribe Architectures (MQTT) (1/30)
-1. The Cloud (AWS and MQTT) (2/6)
-1. Web User Interfaces (HTTP, NGINX, JavaScript) (2/13)
-1. Web Frameworks (Django) (2/20)
-1. Production Web Serving & User/Device Association (2/27)
-1. Native Mobile Development (3/6)
-1. Bluetooth Low Energy on Embedded and Mobile Devices (3/20)
-1. Analytics: Instrumentation, Querying, and Visualization (3/27)
-1. Updating Firmware in the Field (4/3)
+1. Introduction to Connected Devices (Internet of Things) and LAMPi (1/17)
+1. User Experience, User Interfaces, and Touchscreens (Kivy) (1/22)
+1. Publish/Subscribe Architectures (MQTT) (1/29)
+1. The Cloud (AWS and MQTT) (2/5)
+1. Web User Interfaces (HTTP, NGINX, JavaScript) (2/12)
+1. Web Frameworks (Django) (2/19)
+1. Production Web Serving & User/Device Association (2/26)
+1. Native Mobile Development (3/4)
+1. Bluetooth Low Energy on Embedded and Mobile Devices (3/18)
+1. Analytics: Instrumentation, Querying, and Visualization (3/25)
+1. Updating Firmware in the Field (4/1)
 1. System Loading and Load Testing (4/10)
-1. Essential Security - Part 1 - SSL/TLS (4/17)
-1. Essential Security - Part 2 - ACL (4/24)
-1. IoT Platforms (5/1)
+1. Essential Security - Part 1 - SSL/TLS (4/15)
+1. Essential Security - Part 2 - ACL (4/22)
+1. IoT Platforms (4/29)
 
 **Final Projects Presentations** - CWRU Students - Finals Week - 
-likely Thursday 5/4 7:30 - 10:30 PM
+Thursday 5/2 7:30 - 10:30 PM (Location TBD)
 
 Final Projects Presentations - CSU Students - TBD
 
 No classes will be held on:
 
-* Monday, March 13th - CWRU & CSU Spring Break
-* Wednesday, March 15th - CWRU & CSU Spring Break 
+* Monday, March 11th - CWRU & CSU Spring Break
+* Wednesday, March 13th - CWRU & CSU Spring Break 
+* Monday, April 8th - Total Solar Eclipse 2024
 
-Last Day of Classes for all students is Monday, May 1st.
+Last Day of Classes for all students is Monday, April 29th.
 
 &copy; 2015-2024 LeanDog, Inc. and Nick Barendt
