@@ -10,16 +10,18 @@ _Revised January 14, 2024_
 ### Instructor
 
 * **Nick Barendt** _nab2@case.edu_
+* Instructor Office Hours:  By appointment (please email)
 
 ### Course Logistics
 
 * Lecture Time:  Monday & Wednesday 4:50-6:05
 * Location: Nord 356 
-* TA: **Helio Dong** _lxd262@case.edu_
-  * TA Office Hours In-Person (tentative): 
-  * Tuesday 4:00-5:00 PM
-  * Thursday 4:00-5:00PM pm
-* Instructor Office Hours:  By appointment (please email)
+* TA
+	* **Helio Dong** _lxd262@case.edu_
+  	* Office Hours:
+  		* In-Person (Glennan Student Lounge) - Tuesday, Thursday 4:00-5:00 PM
+  		* Slack 9:00 AM - 9:00 PM Daily
+  		* By appointment
 * Slack [https://intro-to-connecteddev.slack.com/](https://intro-to-connecteddev.slack.com/)  
 
 ## Course Description
