@@ -46,6 +46,23 @@ Use sudo carefully.  [Don't let the power go to your head.](https://xkcd.com/149
 
 ### Configure Your Wireless Network
 
+#### Registering your device for the `CaseRegistered` Network
+To connect your Raspberry Pi to the CWRU network, you will need to use the `CaseRegistered` network.  You must register your Raspberry Pi through the MyDevices Portal for it to use the wireless network - this is important!
+
+Each network inferface has a globally unique [MAC Adresss](https://en.wikipedia.org/wiki/MAC_address) short for Medium Access Control.
+
+1. Locate your Raspberry Pi's Wifi MAC Adddress:
+	2. 	In the serial terminal run `ifconfig wlan0`.  This will show you the network information for the Wireless LAN interface.  Locate the string `ether` - the 12 hexadecimal characters, separated by `:`, after that are the MAC Address for your Raspberry Pi.  In the example below, the MAC Address is `b8:27:eb:da:68:24`, shown the green box.
+	![Locate MAC](Images/wlan0_MAC.png)
+2. Login to the CWRU [MyDevices Portal](https://mydevices.case.edu/)
+	**NOTE:** your computer must be connected to `CaseWireless` and be using the CWRU VPN to access the **MyDevices Portal**. 
+3. Select `Yes, Register My Devices`.
+	![Empty MyDevices Form](Images/MyDevices_Portal_before.png)
+4. Enter your Raspberry Pi in the `Device ID (MAC Address)` field and enter a brief description in the `Device Description` field and click `Add`.
+5. Your device should now show up in device list at the bottom of the form:
+	![Example Registered MyDevices Form](Images/MyDevices_Portal_after.png)		
+
+#### Raspberry Pi Network Setup
 1. In the terminal, scan for WiFi networks via `sudo iwlist wlan0 scan`. You'll see networks listed. You'll want to find the name of the network and password.
 	* The name of the network is from either ssid or ESSID.
 2. Add the network details to your Raspberry Pi.  A configuration for connecting to "CaseGuest" and "csuguest" is shown below.
@@ -59,7 +76,7 @@ Use sudo carefully.  [Don't let the power go to your head.](https://xkcd.com/149
 
 
     network={
-        ssid="CaseGuest"
+        ssid="CaseRegistered"
         key_mgmt=NONE
     }
 
