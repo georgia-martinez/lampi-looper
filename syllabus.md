@@ -19,9 +19,7 @@ _Revised January 14, 2024_
 * TA
 	* **Helio Dong** _lxd262@case.edu_
   	* Office Hours:
-  		* In-Person (Glennan Student Lounge) - Tuesday, Thursday 4:00-5:00 PM
-  		* Slack 9:00 AM - 9:00 PM Daily
-  		* By appointment
+  		* Check Canvas
 * Slack [https://intro-to-connecteddev.slack.com/](https://intro-to-connecteddev.slack.com/)  
 
 ## Course Description
