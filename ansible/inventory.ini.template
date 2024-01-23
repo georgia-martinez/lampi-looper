@@ -1,0 +1,13 @@
+# Ansible Hosts file
+# this is the list of hosts (computers) and groups of hosts to be managed
+#  by ansible
+
+
+# replace <IP> with the IP address of your LAMPi 
+#   (e.g., "ansible_ssh_host=10.0.1.34")
+lampi ansible_user=pi ansible_ssh_host=<IP>
+
+# our "group" of LAMPIs, listing the hostname for each on a separate line
+[lampis]
+lampi
+

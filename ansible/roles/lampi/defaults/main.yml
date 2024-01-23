@@ -1,0 +1,9 @@
+---
+# vars file for lampi
+cache_update_valid_secs: 900
+pigpio_archive: files/01_pigpio.zip
+pigpio_tmp_dir: /tmp/pigpio
+path_to_pigpiod: /usr/local/bin/pigpiod
+minimum_pigpiod_version: 68
+pigiod_cron_file: 1_pigpiod_ansible
+

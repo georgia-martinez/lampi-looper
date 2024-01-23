@@ -49,4 +49,6 @@ Other documentation:
 
 * [https://wiki.python.org/moin/ForLoop](https://wiki.python.org/moin/ForLoop)
 
+Next up: go to [Introduction to Ansible](../01.9_Ansible_Introduction/README.md)
+
 &copy; 2015-2024 LeanDog, Inc. and Nick Barendt

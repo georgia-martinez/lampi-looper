@@ -8,4 +8,6 @@ This Git Repository will be updated each week/chapter with new assignments and w
 
 ## [Chapter 1: Build a Raspberry Pi Controlled Desk Lamp](Courseware/01.md)
 
+## [Chapter 2: Native Embedded App](Courseware/02.md)
+
 &copy; 2015-2024 LeanDog, Inc. and Nick Barendt

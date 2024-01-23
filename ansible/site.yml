@@ -1,0 +1,2 @@
+# all of our playbooks
+- import_playbook: lampis.yml
