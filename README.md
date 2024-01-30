@@ -10,4 +10,6 @@ This Git Repository will be updated each week/chapter with new assignments and w
 
 ## [Chapter 2: Native Embedded App](Courseware/02.md)
 
+## [Chapter 3:  Pub/Sub](Courseware/03.md)
+
 &copy; 2015-2024 LeanDog, Inc. and Nick Barendt

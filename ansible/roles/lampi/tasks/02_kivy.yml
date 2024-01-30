@@ -1,0 +1,30 @@
+- name: install packages needed for Kivy
+  become: True
+  apt:
+    name: ['python3-dev', 'libmtdev1']
+    cache_valid_time: "{{ cache_update_valid_secs }}"
+
+
+# this is a pre-built wheel for Buster and Kivy 2.1.0
+- name: install kivy
+  become: True
+  pip:
+    name: "kivy[base]"
+
+# install kivy_examples and pillow
+- name: install kivy related python libraries and examples
+  become: True
+  pip:
+    name: ['kivy_examples', 'pillow']
+
+
+- name: generate kivy config for pi user
+  command: python3 -c "from kivy.app import App;App().load_config()" creates={{ pi_user_kivy_config }}
+
+- name: update pi user kivy config [input] for PiTFT 2.8" Capacitive
+  ini_file:
+    dest: "{{ pi_user_kivy_config }}"
+    section: input
+    option: "{{ item.key }}"
+    value: "{{ item.value }}"
+  with_dict: "{{ kivy_config_dict_input }}"
