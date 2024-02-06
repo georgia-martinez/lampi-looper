@@ -19,7 +19,7 @@ _Revised January 14, 2024_
 * TA
 	* **Helio Dong** _lxd262@case.edu_
   	* Office Hours:
-  		* Check Canvas
+            * Check Canvas
 * Slack [https://intro-to-connecteddev.slack.com/](https://intro-to-connecteddev.slack.com/)  
 
 ## Course Description

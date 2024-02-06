@@ -12,4 +12,6 @@ This Git Repository will be updated each week/chapter with new assignments and w
 
 ## [Chapter 3:  Pub/Sub](Courseware/03.md)
 
+## [Chapter 4: To the Cloud!](Courseware/04.md)
+
 &copy; 2015-2024 LeanDog, Inc. and Nick Barendt

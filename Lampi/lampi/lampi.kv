@@ -30,7 +30,7 @@ BoxLayout:
     GradientSlider:
       id: saturation_slider
       size_hint_y: 0.33
-      colors: white, hsv_to_rgb(hue_slider.value, 1.0, 1.0)
+      colors: white, hsv_to_rgb(app.hue, 1.0, 1.0)
       value: app.saturation
       on_value: app.saturation = self.value_normalized
     # brightness
@@ -48,7 +48,7 @@ BoxLayout:
     ColorBox:
       id: button_hue
       size_hint_y: 0.1
-      color: hsv_to_rgb(hue_slider.value, saturation_slider.value, 1.0)
+      color: hsv_to_rgb(app.hue, app.saturation, 1.0)
     LampiToggle:
       id: button_onoff
       size_hint_y: 0.90

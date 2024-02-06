@@ -1,52 +1,41 @@
+import platform
 from kivy.app import App
 from kivy.properties import NumericProperty, AliasProperty, BooleanProperty
 from kivy.clock import Clock
 from kivy.uix.popup import Popup
 from kivy.uix.label import Label
 from math import fabs
-import platform
+import json
+from paho.mqtt.client import Client
 import pigpio
+from lamp_common import *
 import lampi.lampi_util
 
 
-# kludgey way to figure out if we're on the Raspberry Pi
-if 'arm' not in platform.platform():
-    class LampDriver(object):
-        def set_lamp_state(self, hue, saturation, brightness, is_on):
-            pass
-
-else:
-    from .lamp_driver import LampDriver
-
-TOLERANCE = 0.000001
-
-
 class LampiApp(App):
-    _hue = NumericProperty(1.0)
-    _saturation = NumericProperty(1.0)
-    _brightness = NumericProperty(1.0)
-    lamp_is_on = BooleanProperty(True)
+    _updatingUI = False
+    _hue = NumericProperty()
+    _saturation = NumericProperty()
+    _brightness = NumericProperty()
+    lamp_is_on = BooleanProperty()
 
     def _get_hue(self):
         return self._hue
 
     def _set_hue(self, value):
-        if fabs(self.hue - value) > TOLERANCE:
-            self._hue = value
+        self._hue = value
 
     def _get_saturation(self):
         return self._saturation
 
     def _set_saturation(self, value):
-        if fabs(self.saturation - value) > TOLERANCE:
-            self._saturation = value
+        self._saturation = value
 
     def _get_brightness(self):
         return self._brightness
 
     def _set_brightness(self, value):
-        if fabs(self.brightness - value) > TOLERANCE:
-            self._brightness = value
+        self._brightness = value
 
     hue = AliasProperty(_get_hue, _set_hue, bind=['_hue'])
     saturation = AliasProperty(_get_saturation, _set_saturation,
@@ -56,25 +45,72 @@ class LampiApp(App):
     gpio17_pressed = BooleanProperty(False)
 
     def on_start(self):
-        self.lamp_driver = LampDriver()
-        Clock.schedule_once(lambda dt: self._update_leds(), 0.01)
+        self._publish_clock = None
+        self.mqtt = Client()
+        self.mqtt.enable_logger()
+        self.mqtt.on_connect = self.on_connect
+        self.mqtt.connect(MQTT_BROKER_HOST, port=MQTT_BROKER_PORT,
+                          keepalive=MQTT_BROKER_KEEP_ALIVE_SECS)
+        self.mqtt.loop_start()
         self.set_up_GPIO_and_IP_popup()
 
     def on_hue(self, instance, value):
-        Clock.schedule_once(lambda dt: self._update_leds(), 0.01)
+        if self._updatingUI:
+            return
+        if self._publish_clock is None:
+            self._publish_clock = Clock.schedule_once(
+                lambda dt: self._update_leds(), 0.01)
 
     def on_saturation(self, instance, value):
-        Clock.schedule_once(lambda dt: self._update_leds(), 0.01)
+        if self._updatingUI:
+            return
+        if self._publish_clock is None:
+            self._publish_clock = Clock.schedule_once(
+                lambda dt: self._update_leds(), 0.01)
 
     def on_brightness(self, instance, value):
-        Clock.schedule_once(lambda dt: self._update_leds(), 0.01)
+        if self._updatingUI:
+            return
+        if self._publish_clock is None:
+            self._publish_clock = Clock.schedule_once(
+                lambda dt: self._update_leds(), 0.01)
 
     def on_lamp_is_on(self, instance, value):
-        Clock.schedule_once(lambda dt: self._update_leds(), 0.01)
+        if self._updatingUI:
+            return
+        if self._publish_clock is None:
+            self._publish_clock = Clock.schedule_once(
+                lambda dt: self._update_leds(), 0.01)
+
+    def on_connect(self, client, userdata, flags, rc):
+        self.mqtt.subscribe(TOPIC_LAMP_CHANGE_NOTIFICATION)
+        self.mqtt.message_callback_add(TOPIC_LAMP_CHANGE_NOTIFICATION,
+                                       self.receive_new_lamp_state)
+
+    def receive_new_lamp_state(self, client, userdata, message):
+        new_state = json.loads(message.payload.decode('utf-8'))
+        Clock.schedule_once(lambda dt: self._update_ui(new_state), 0.01)
+
+    def _update_ui(self, new_state):
+        self._updatingUI = True
+        try:
+            if 'color' in new_state:
+                self.hue = new_state['color']['h']
+                self.saturation = new_state['color']['s']
+            if 'brightness' in new_state:
+                self.brightness = new_state['brightness']
+            if 'on' in new_state:
+                self.lamp_is_on = new_state['on']
+        finally:
+            self._updatingUI = False
 
     def _update_leds(self):
-        self.lamp_driver.set_lamp_state(self._hue, self._saturation,
-                                        self._brightness, self.lamp_is_on)
+        msg = {'color': {'h': self._hue, 's': self._saturation},
+               'brightness': self._brightness,
+               'on': self.lamp_is_on}
+        self.mqtt.publish(TOPIC_SET_LAMP_CONFIG,
+                          json.dumps(msg).encode('utf-8'))
+        self._publish_clock = None
 
     def set_up_GPIO_and_IP_popup(self):
         self.pi = pigpio.pi()

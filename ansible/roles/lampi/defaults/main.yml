@@ -17,6 +17,4 @@ connected_devices_git_repo_url: "git@github.com:CWRU-Connected-Devices/connected
 connected_devices_git_repo_version: main
 repo_directory: "/home/pi/connected-devices"
 lampi_app_cron_file: "3_lampiapp_ansible"
-
-
-
+lamp_service_cron_file: "2_lampservice_ansible"
