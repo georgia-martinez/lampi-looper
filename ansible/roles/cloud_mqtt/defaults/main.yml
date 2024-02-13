@@ -1,0 +1,5 @@
+---
+# vars file for cloud_mqtt
+
+cache_update_valid_secs: 900
+

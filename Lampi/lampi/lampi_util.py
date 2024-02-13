@@ -2,6 +2,8 @@ import socket
 import fcntl
 import struct
 
+DEVICE_ID_FILENAME = '/sys/class/net/eth0/address'
+
 
 def get_ip_address(ifname):
     s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -13,3 +15,11 @@ def get_ip_address(ifname):
         )[20:24])
     except Exception:
         return ''
+
+
+def get_device_id():
+    try:
+        mac_addr = open(DEVICE_ID_FILENAME).read().strip()
+        return mac_addr.replace(':', '')
+    except Exception:
+        return 'UNKNOWN'

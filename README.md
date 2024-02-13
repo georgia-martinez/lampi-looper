@@ -14,4 +14,6 @@ This Git Repository will be updated each week/chapter with new assignments and w
 
 ## [Chapter 4: To the Cloud!](Courseware/04.md)
 
+## [Chapter 5: Dynamic Web Interactivity with Javascript](Courseware/05.md)
+
 &copy; 2015-2024 LeanDog, Inc. and Nick Barendt

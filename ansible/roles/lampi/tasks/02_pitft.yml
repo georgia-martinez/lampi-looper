@@ -12,41 +12,47 @@
     name: python3-pip
     cache_valid_time: "{{ cache_update_valid_secs }}"
 
-- name: install dependencies for adafruit script
+- name: install dependencies for adafruit script and ansible pids
   become: True
   pip:
     name:
       - adafruit-python-shell
       - click
+      - psutil
+
+- name: use running fbcp as proof pitft already installed
+  community.general.pids:
+    name: fbcp
+  register: pid_of_fbcp
 
 - name: remove temporary directory
   become: yes 
+  when: not pid_of_fbcp.pids
   file: path={{ adafruit_tmp_dir }} state=absent
   ignore_errors: true
 
 - name: create temporary  directory
   become: yes 
+  when: not pid_of_fbcp.pids
   file: path={{ adafruit_tmp_dir }} state=directory
 
 - name: clone adafruit repo
   become: True
+  when: not pid_of_fbcp.pids
   git:
     repo: https://github.com/adafruit/Raspberry-Pi-Installer-Scripts.git
     dest: "{{ adafruit_tmp_dir }}"
 
-- name: run the adafruit-pitft.sh
+- name: run pitft script and REBOOT
   become: True
-  command:
-    argv:
-      - /usr/bin/python3
-      - "{{ adafruit_tmp_dir }}/adafruit-pitft.py"
-      - --display=28c
-      - --rotation=180
-      - --install-type=fbcp
-      - --reboot=no
+  when: not pid_of_fbcp.pids
+  reboot:
+    reboot_timeout: 120
+    reboot_command: /usr/bin/python3 "{{ adafruit_tmp_dir }}/adafruit-pitft.py"  --display=28c --rotation=180 --install-type=fbcp --reboot=yes 
 
 - name: remove temporary directory
   become: yes
+  when: not pid_of_fbcp.pids
   file: path={{ adafruit_tmp_dir }} state=absent
   ignore_errors: true
 

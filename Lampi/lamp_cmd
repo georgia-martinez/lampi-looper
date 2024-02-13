@@ -8,12 +8,14 @@ import paho.mqtt.publish as mqtt_publish
 from paho.mqtt.client import Client
 from lamp_common import *
 
+MQTT_CLIENT_ID = 'lamp_cmd'
+
 
 class LampiCmd(object):
 
     def __init__(self):
         self.received_lamp_state = None
-        self.client = Client()
+        self.client = Client(client_id=MQTT_CLIENT_ID)
         self.client.enable_logger()
         self.client.on_connect = self.on_connect
         self.client.connect(MQTT_BROKER_HOST,
@@ -60,7 +62,7 @@ class LampiCmd(object):
     def on_connect(self, client, userdata, flags, rc):
         client.message_callback_add(TOPIC_LAMP_CHANGE_NOTIFICATION,
                                     self._receive_lamp_state)
-        client.subscribe(TOPIC_LAMP_CHANGE_NOTIFICATION)
+        client.subscribe(TOPIC_LAMP_CHANGE_NOTIFICATION, qos=1)
 
     def update_lamp_state(self):
         args = self.build_argument_parser().parse_args()
@@ -77,9 +79,12 @@ class LampiCmd(object):
         if args.off is not None:
             self.received_lamp_state['on'] = False
 
+        self.received_lamp_state['client'] = MQTT_CLIENT_ID
+
         self.client.publish(TOPIC_SET_LAMP_CONFIG,
                             json.dumps(self.received_lamp_state
-                                ).encode('utf-8'))
+                                       ).encode('utf-8'),
+                                        qos=1)
         # delay for a bit to allow message to be published then
         #  shutdown MQTT thread
         sleep(0.1)

@@ -62,6 +62,8 @@ class LampService(object):
 
     def _create_and_configure_broker_client(self):
         client = mqtt.Client(client_id=MQTT_CLIENT_ID, protocol=MQTT_VERSION)
+        client.will_set(client_state_topic(MQTT_CLIENT_ID), "0",
+                        qos=2, retain=True)
         client.enable_logger()
         client.on_connect = self.on_connect
         client.message_callback_add(TOPIC_SET_LAMP_CONFIG,
@@ -90,7 +92,11 @@ class LampService(object):
         self._client.loop_forever()
 
     def on_connect(self, client, userdata, rc, unknown):
-        self._client.subscribe(TOPIC_SET_LAMP_CONFIG)
+        self._client.publish(client_state_topic(MQTT_CLIENT_ID), "1",
+                             qos=2, retain=True)
+        self._client.subscribe(TOPIC_SET_LAMP_CONFIG, qos=1)
+        # publish current lamp state at startup
+        self.publish_config_change()
 
     def default_on_message(self, client, userdata, msg):
         print("Received unexpected message on topic " +
@@ -99,8 +105,9 @@ class LampService(object):
     def on_message_set_config(self, client, userdata, msg):
         try:
             new_config = json.loads(msg.payload.decode('utf-8'))
-            if 'client' in new_config:
-                self.set_last_client(new_config['client'])
+            if 'client' not in new_config:
+                raise InvalidLampConfig()
+            self.set_last_client(new_config['client'])
             if 'on' in new_config:
                 self.set_current_onoff(new_config['on'])
             if 'color' in new_config:
@@ -117,7 +124,8 @@ class LampService(object):
                   'on': self.get_current_onoff(),
                   'client': self.get_last_client()}
         self._client.publish(TOPIC_LAMP_CHANGE_NOTIFICATION,
-                             json.dumps(config).encode('utf-8'), retain=True)
+                             json.dumps(config).encode('utf-8'), qos=1,
+                             retain=True)
 
     def get_last_client(self):
         return self.db['client']

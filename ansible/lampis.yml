@@ -1,5 +1,7 @@
 # our LAMPi specific playbooks (there will be others, non-device playbooks, later)
 - hosts: lampis
+  vars:
+    ec2_broker_port: 50001
   roles:
     - lampi
   # force  apt-get (avoids annoying Ansible warnings about 
