@@ -1,0 +1,3 @@
+---
+# tasks file for cloud_web
+- import_tasks: 05.yml

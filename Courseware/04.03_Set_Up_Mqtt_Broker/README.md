@@ -160,10 +160,10 @@ Now we are going to connect our two Mosquitto brokers (the one running on our Ra
 
 Please refer to the "Configuring Bridges" section of [mosquitto.conf](http://mosquitto.org/man/mosquitto-conf-5.html).
 
-Use a text editor running as sudo to create a file at `/etc/mosquitto/conf.d`, example:
+Use a text editor running as sudo to create a file at `/etc/mosquitto/conf.d`, namd `lampi_bridge.conf`:
 
 ```
-lamp$ sudo nano /etc/mosquitto/conf.d/bridging.conf
+lamp$ sudo nano /etc/mosquitto/conf.d/lampi_bridge.conf
 ```
 
 Edit the file to add the following lines:

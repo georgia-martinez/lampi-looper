@@ -7,5 +7,5 @@
 - name: install Paho Python MQTT client library
   become: True
   pip:
-    name: paho-mqtt
+    name: paho-mqtt==1.6.1
 

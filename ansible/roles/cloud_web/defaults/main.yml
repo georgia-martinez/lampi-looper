@@ -1,0 +1,8 @@
+---
+# vars file for cloud_web
+
+# variables for chapter 05
+connected_devices_git_repo_url: "git@github.com:CWRU-Connected-Devices/connected-devices-spring24.git"
+repo_directory: /home/ubuntu/connected-devices
+connected_devices_git_repo_version: main
+root_web_directory: /home/ubuntu/connected-devices/Web/static

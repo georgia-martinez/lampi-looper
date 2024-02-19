@@ -11,7 +11,7 @@ We will use the Python 'pip' package management tool to install the latest versi
 ## Install Paho
 
 ```
-pi@raspberrypi:~$ sudo pip3 install paho-mqtt
+pi@raspberrypi:~$ sudo pip3 install paho-mqtt==1.6.1
 ```
 
 ### Python Paho Documentation

@@ -16,4 +16,6 @@ This Git Repository will be updated each week/chapter with new assignments and w
 
 ## [Chapter 5: Dynamic Web Interactivity with Javascript](Courseware/05.md)
 
+## [Chapter 6: Web Frameworks](Courseware/06.md)
+
 &copy; 2015-2024 LeanDog, Inc. and Nick Barendt
