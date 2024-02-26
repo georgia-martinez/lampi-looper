@@ -18,4 +18,6 @@ This Git Repository will be updated each week/chapter with new assignments and w
 
 ## [Chapter 6: Web Frameworks](Courseware/06.md)
 
+## [Chapter 7: Production Web Deployment Plus User-Device Association](Courseware/07.md)
+
 &copy; 2015-2024 LeanDog, Inc. and Nick Barendt
