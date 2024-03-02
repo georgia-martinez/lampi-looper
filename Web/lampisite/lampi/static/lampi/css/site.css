@@ -144,3 +144,14 @@ a, h2, label, p {
   background-color: #ebebeb;
 }
 
+.btn-link {
+    border: none;
+    outline: none;
+    background: none;
+    cursor: pointer;
+    color: white;
+    padding: 0;
+    text-decoration: underline;
+    font-family: inherit;
+    font-size: inherit;
+}
