@@ -20,4 +20,6 @@ This Git Repository will be updated each week/chapter with new assignments and w
 
 ## [Chapter 7: Production Web Deployment Plus User-Device Association](Courseware/07.md)
 
+## [Chapter 8: Introduction to Mobile Development](Courseware/08.md)
+
 &copy; 2015-2024 LeanDog, Inc. and Nick Barendt

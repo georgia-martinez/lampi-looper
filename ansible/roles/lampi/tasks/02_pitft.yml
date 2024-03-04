@@ -42,6 +42,7 @@
   git:
     repo: https://github.com/adafruit/Raspberry-Pi-Installer-Scripts.git
     dest: "{{ adafruit_tmp_dir }}"
+    version: "{{ adafruit_git_version }}"
 
 - name: run pitft script and REBOOT
   become: True

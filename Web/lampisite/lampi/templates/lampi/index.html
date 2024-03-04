@@ -9,8 +9,10 @@
         {{ device.name }} {{device.device_id }}</a></li>
     {% endfor %}
     </ul>
+    <a href="{% url 'lampi:add' %}">Add a LAMPI Device</a>
 {% else %}
     <p>No devices are available.</p>
+    <a href="{% url 'lampi:add' %}">Add a LAMPI Device</a>
 {% endif %}
 
 {% endblock %}

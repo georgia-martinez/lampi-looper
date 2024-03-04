@@ -1,5 +1,4 @@
 import re
-import json
 from paho.mqtt.client import Client
 from django.contrib.auth.models import User
 from django.core.management.base import BaseCommand
@@ -55,6 +54,8 @@ class Command(BaseCommand):
                 new_device.user = User.objects.get(username=uname)
                 new_device.save()
                 print("Created {}".format(new_device))
+                # send association MQTT message
+                new_device.publish_unassociated_msg()
 
     def handle(self, *args, **options):
         self._create_default_user_if_needed()

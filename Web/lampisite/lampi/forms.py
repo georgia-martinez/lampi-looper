@@ -6,11 +6,12 @@ from .models import Lampi
 
 
 def device_association_topic(device_id):
-    return '/devices/{}/lamp/associated'.format(device_id)
+    return 'devices/{}/lamp/associated'.format(device_id)
 
 
 class AddLampiForm(forms.Form):
-    association_code = forms.CharField(label="Association Code", max_length=6)
+    association_code = forms.CharField(label="Association Code", min_length=6,
+                                       max_length=6)
 
     def clean(self):
         cleaned_data = super(AddLampiForm, self).clean()
