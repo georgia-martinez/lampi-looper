@@ -144,4 +144,4 @@ Will be based on final proposal submission (but please put the same thoughtfulne
 
 
 
- 
+&copy; 2015-2024 LeanDog, Inc. and Nick Barendt

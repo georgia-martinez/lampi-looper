@@ -22,4 +22,6 @@ This Git Repository will be updated each week/chapter with new assignments and w
 
 ## [Chapter 8: Introduction to Mobile Development](Courseware/08.md)
 
+## [Chapter 9: Introduction to Bluetooth Low Energy](Courseware/09.md)
+
 &copy; 2015-2024 LeanDog, Inc. and Nick Barendt
