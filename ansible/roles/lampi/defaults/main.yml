@@ -9,7 +9,7 @@ pigiod_cron_file: 1_pigpiod_ansible
 
 # chapter 2 variables
 adafruit_tmp_dir: /tmp/adafruit_rpi
-adafruit_git_version: 103b13388585fee0ab65b31c40aaef16d40af0c1
+adafruit_git_version: b8d16b01e050bd03b693e34ceda924d7972f7321
 pi_user_kivy_config: /home/pi/.kivy/config.ini
 kivy_config_dict_input:
     "%(name)s": "probesysfs,provider=mtdev,param=max_position_x=240,param=max_position_y=320"
