@@ -7,7 +7,7 @@ from enum import Enum, auto
 class LampiGroove:
     def __init__(self):
         self.pause = None
-        self.bpm = self.set_bpm(100)
+        self.bpm = self.set_bpm(200)
         self.beats_per_measure = 4
 
         self.groove = [0 for _ in range(self.beats_per_measure ** 2)]

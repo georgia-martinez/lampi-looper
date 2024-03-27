@@ -90,7 +90,7 @@ class LampiApp(App):
 
         for i in range(16):
             btn = BeatButton(i)
-            btn.bind(on_press=self.on_beat_button_press)  # Bind update_thing method to toggle_color event
+            btn.bind(on_press=self.on_beat_button_press)
             self.button_grid.add_widget(btn)
 
         layout.add_widget(self.button_grid)
@@ -102,6 +102,7 @@ class LampiApp(App):
 
     def update_bpm_label(self, instance, value):
         self.bpm_label.text = f"BPM: {int(value)}"
+        self.publish_state_change()
 
     def on_beat_button_press(self, instance):
         instance.toggle_color()
@@ -109,7 +110,7 @@ class LampiApp(App):
         self.publish_state_change()
 
     def publish_state_change(self):
-        msg = {"client": "client", "groove": self.groove, "bpm": self.bpm_label.text}
+        msg = {"client": "ui", "groove": self.groove, "bpm": self.bpm_label.text}
         print(msg)
 
     def set_up_network_popup(self):
