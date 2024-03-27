@@ -1,8 +1,19 @@
+import platform
+import json
+import pigpio
+import lampi.lampi_util
+
+from enum import Enum
+from math import fabs
 from kivy.app import App
 from kivy.uix.gridlayout import GridLayout
 from kivy.uix.button import Button
-
-from enum import Enum
+from kivy.properties import NumericProperty, AliasProperty, BooleanProperty
+from kivy.clock import Clock
+from kivy.uix.popup import Popup
+from kivy.uix.label import Label
+from paho.mqtt.client import Client
+from lamp_common import *
 
 class Color(Enum):
     GRAY = (0.5, 0.5, 0.5, 1)
@@ -52,5 +63,44 @@ class GridLayoutExample(GridLayout):
             self.add_widget(btn)
 
 class LampiApp(App):
+
+    gpio17_pressed = BooleanProperty(False)
+    popup_opened = BooleanProperty(False)
+
     def build(self):
         return GridLayoutExample()
+
+    def on_start(self):
+        self.set_up_GPIO_and_network_status_popup()
+
+    def set_up_GPIO_and_network_status_popup(self):
+        self.pi = pigpio.pi()
+        self.pi.set_mode(17, pigpio.INPUT)
+        self.pi.set_pull_up_down(17, pigpio.PUD_UP)
+        Clock.schedule_interval(self._poll_GPIO, 0.05)
+        self.network_status_popup = self._build_network_status_popup()
+        self.network_status_popup.bind(on_open=self.update_popup_ip_address)
+
+    def _build_network_status_popup(self):
+        return Popup(title='Network Status',
+                     content=Label(text='IP ADDRESS WILL GO HERE'),
+                     size_hint=(1, 1), auto_dismiss=False)
+
+    def update_popup_ip_address(self, instance):
+        interface = "wlan0"
+        ipaddr = lampi.lampi_util.get_ip_address(interface)
+        deviceid = lampi.lampi_util.get_device_id()
+        msg = "{}: {}\nDeviceID: {}".format(interface, ipaddr, deviceid)
+        instance.content.text = msg
+
+    def on_gpio17_pressed(self, instance, value):
+        if value:
+            if not self.popup_opened:
+                self.network_status_popup.open()
+                self.popup_opened = True
+            else:
+                self.network_status_popup.dismiss()
+                self.popup_opened = False
+
+    def _poll_GPIO(self, dt):
+        self.gpio17_pressed = not self.pi.read(17)
