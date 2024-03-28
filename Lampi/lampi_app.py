@@ -46,7 +46,7 @@ class BeatButton(Button):
 
         self.color_id = 0
         self.curr_color = Color.GRAY
-        self._set_color()
+        self.set_color()
 
     def toggle_color(self):
         if self.color_id != len(self.colors) - 1:
@@ -54,9 +54,9 @@ class BeatButton(Button):
         else:
             self.color_id = 0
 
-        self._set_color()
+        self.set_color()
 
-    def _set_color(self):
+    def set_color(self):
         new_color = self.colors[self.color_id]
 
         self.background_color = new_color.value
@@ -68,10 +68,10 @@ class LampiApp(App):
     network_button_pressed = BooleanProperty(False)
     network_popup_open = BooleanProperty(False)
 
-    groove = [0 for _ in range(16)]
-
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
+
+        self.reset_loop()
 
         # MQTT
         self.mqtt = Client(client_id="lampi_ui")
@@ -112,19 +112,26 @@ class LampiApp(App):
 
         return layout
 
+    def reset_loop(self):
+        self.loop = [0 for _ in range(16)]
+        self.publish_state_change()
+
     def update_bpm_label(self, instance, value):
         self.bpm_label.text = f"BPM: {int(value)}"
         self.publish_state_change()
 
     def on_beat_button_press(self, instance):
         instance.toggle_color()
-        self.groove[instance.id] = instance.curr_color.id()
+        self.loop[instance.id] = instance.curr_color.id()
         self.publish_state_change()
 
     def publish_state_change(self):
-        msg = {"groove": self.groove, "bpm": self.bpm_label.text}
+        msg = self.ui_update_msg(self.loop, self.bpm_label.text)
         
         self.mqtt.publish(TOPIC_UI_UPDATE, json.dumps(msg).encode('utf-8'), qos=1)
+
+    def ui_update_msg(self, loop, bpm):
+        return {"loop": loop, "bpm": bpm}
 
     def setup_network_popup(self):
         self.pi = pigpio.pi()
@@ -133,10 +140,10 @@ class LampiApp(App):
 
         Clock.schedule_interval(self._poll_GPIO, 0.05)
 
-        self.network_popup = self._build_network_popup()
+        self.network_popup = self.build_network_popup()
         self.network_popup.bind(on_open=self.update_popup_ip_address)
 
-    def _build_network_popup(self):
+    def build_network_popup(self):
         return Popup(title='Network Status',
                      content=Label(text='IP ADDRESS WILL GO HERE'),
                      size_hint=(1, 1), auto_dismiss=False)

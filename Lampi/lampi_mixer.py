@@ -4,30 +4,40 @@ import json
 import paho.mqtt.client as mqtt
 
 from paho.mqtt.client import Client
-from sound import Sound
 from enum import Enum, auto
-from lampi_common import *
 from lampi_app import Color
+from lampi_common import *
 
-class LampiGroove:
+class SoundFile():
+    mixer = pygame.mixer
+    mixer.init()
+
+    def __init__(self, sound_name):
+        sound_file = os.path.join(os.getcwd(), "Lampi/sounds", sound_name + ".WAV")
+        self.sound = Sound.mixer.Sound(sound_file)
+
+    def play(self):
+        self.sound.play()
+
+class LampiMixer:
     def __init__(self):
         self.pause = None
         self.bpm = self.set_bpm(100)
         self.beats_per_measure = 4
 
-        self.groove = [0 for _ in range(self.beats_per_measure ** 2)]
+        self.loop = [0 for _ in range(self.beats_per_measure ** 2)]
 
         self.sound_map = {
             0: None,
-            1: Sound("hi_hat"),
-            2: Sound("snare"),
-            3: Sound("tom"),
+            1: SoundFile("hi_hat"),
+            2: SoundFile("snare"),
+            3: SoundFile("tom"),
         }
 
         pygame.init()
 
         # MQTT
-        self.mqtt = Client(client_id="lampi_groove")
+        self.mqtt = Client(client_id="lampi_mixer")
         self.mqtt.enable_logger()
         self.mqtt.connect(MQTT_BROKER_HOST, port=MQTT_BROKER_PORT, keepalive=MQTT_BROKER_KEEP_ALIVE_SECS)
         self.mqtt.loop_start()
@@ -43,10 +53,10 @@ class LampiGroove:
                 if event.type == pygame.QUIT:
                     running = False
 
-            for beat in range(len(self.groove)):
-                sound_id = self.groove[beat]
+            for beat in range(len(self.loop)):
+                sound_id = self.loop[beat]
 
-                if self.groove[beat] != 0:
+                if self.loop[beat] != 0:
                     self.sound_map[sound_id].play()
                 
                 self.update_led(sound_id)
@@ -57,23 +67,26 @@ class LampiGroove:
 
     def update_led(self, sound_id):
         if sound_id == 0:
-            msg = {"r": 0, "g": 0, "b": 0}
+            msg = self.led_update_msg(0, 0, 0)
         else:
             color = Color.get_color(sound_id)
             r, g, b, _ = color.value
 
-            msg = {"r": r, "g": g, "b": b}
+            msg = self.led_update_msg(r, g, b)
 
         self.mqtt.publish(TOPIC_LED_UPDATE, json.dumps(msg).encode('utf-8'), qos=1)
 
-if __name__ == "__main__":
-    lampi_groove = LampiGroove()
+    def led_update_msg(self, r, g, b):
+        return {"r": r, "g": g, "b": b}
 
-    lampi_groove.groove = [
+if __name__ == "__main__":
+    mixer = LampiMixer()
+
+    mixer.loop = [
         3, 0, 1, 0,
         2, 0, 1, 0,
         3, 0, 1, 0,
         2, 0, 1, 0,
     ]
 
-    lampi_groove.play()
+    mixer.play()
