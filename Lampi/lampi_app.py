@@ -62,6 +62,8 @@ class BeatButton(Button):
         self.background_color = new_color.value
         self.curr_color = new_color
 
+MQTT_CLIENT_ID = "lampi_ui"
+
 class LampiApp(App):
 
     NETWORK_PIN = 17
@@ -74,13 +76,31 @@ class LampiApp(App):
         self.reset_loop()
 
         # MQTT
-        self.mqtt = Client(client_id="lampi_ui")
-        self.mqtt.enable_logger()
-        self.mqtt.connect(MQTT_BROKER_HOST, port=MQTT_BROKER_PORT, keepalive=MQTT_BROKER_KEEP_ALIVE_SECS)
-        self.mqtt.loop_start()
+        self.client = self.create_client()
 
         # Network popup
         self.setup_network_popup()
+
+    def create_client(self):
+        client = mqtt.Client(client_id=MQTT_CLIENT_ID)
+        client.enable_logger()
+        client.connect(MQTT_BROKER_HOST, port=MQTT_BROKER_PORT, keepalive=MQTT_BROKER_KEEP_ALIVE_SECS)
+        client.on_connect = self.on_connect
+        client.message_callback_add(TOPIC_UI_UPDATE, self.update_ui)
+        client.loop_start()
+
+        return client
+
+    def on_connect(self, client, userdata, rc, unknown):
+        self._client.subscribe(TOPIC_UI_UPDATE, qos=1)
+
+    def update_ui(self, client, userdata, msg):
+        msg = json.loads(msg.payload.decode('utf-8'))
+
+        if msg["client"] == MQTT_CLIENT_ID
+            return
+
+        # TODO: update ui
 
     def build(self):
         layout = BoxLayout(orientation="vertical")
@@ -131,7 +151,7 @@ class LampiApp(App):
         self.mqtt.publish(TOPIC_UI_UPDATE, json.dumps(msg).encode('utf-8'), qos=1)
 
     def ui_update_msg(self, loop, bpm):
-        return {"loop": loop, "bpm": bpm}
+        return {"client": MQTT_CLIENT_ID, "loop": loop, "bpm": bpm}
 
     def setup_network_popup(self):
         self.pi = pigpio.pi()

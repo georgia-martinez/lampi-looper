@@ -9,7 +9,7 @@ import colorsys
 from lampi_mixer import LampiMixer
 from lampi_common import *
 
-MQTT_CLIENT_ID = "lamp_service"
+MQTT_CLIENT_ID = "lampi_service"
 MAX_STARTUP_WAIT_SECS = 10.0
 
 
@@ -34,6 +34,7 @@ class LampiDriver(object):
 
 
 class LampiService(object):
+
     def __init__(self):
         self.lampi_driver = LampiDriver()
         self.lampi_mixer = LampiMixer()
@@ -44,13 +45,23 @@ class LampiService(object):
     def setup_db(self):
         self.db = shelve.open("lampi_state", writeback=True)
 
+        if "loop" not in self.db:
+            self.db["loop"] = [0 for _ in range(16)]
+
+        if "bpm" not in self.db:
+            self.db["bpm"] = 100
+
+        self.db.sync()
+
     def create_client(self):
         client = mqtt.Client(client_id=MQTT_CLIENT_ID, protocol=MQTT_VERSION)
         # client.will_set(client_state_topic(MQTT_CLIENT_ID), "0",
         #                 qos=2, retain=True)
         client.enable_logger()
         client.on_connect = self.on_connect
+
         client.message_callback_add(TOPIC_LED_UPDATE, self.change_led_color)
+        client.message_callback_add(TOPIC_UI_UPDATE, self.update_db)
 
         return client
 
@@ -85,6 +96,16 @@ class LampiService(object):
         msg = json.loads(msg.payload.decode('utf-8'))
         self.lampi_driver.change_color(msg["r"], msg["g"], msg["b"])
 
+     def update_db(self, client, userdata, msg):
+        msg = json.loads(msg.payload.decode('utf-8'))
+
+        if msg["client"] == MQTT_CLIENT_ID:
+            return
+
+        self.db["loop"] = msg["loop"]
+        self.db["bpm"] = msg["bpm"]
+
+        self.db.sync()
 
 if __name__ == "__main__":
     lampi = LampiService().serve()
