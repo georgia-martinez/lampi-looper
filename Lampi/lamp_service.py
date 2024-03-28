@@ -47,17 +47,25 @@ class LampDriver(object):
 class LampService(object):
     def __init__(self):
         self.lamp_driver = LampDriver()
+        self._setup_db()
         self._client = self._create_and_configure_broker_client()
+
+    def _setup_db(self):
         self.db = shelve.open(LAMP_STATE_FILENAME, writeback=True)
+
         if 'color' not in self.db:
             self.db['color'] = {'h': round(1.0, FP_DIGITS),
                                 's': round(1.0, FP_DIGITS)}
+
         if 'brightness' not in self.db:
             self.db['brightness'] = round(1.0, FP_DIGITS)
+
         if 'on' not in self.db:
             self.db['on'] = True
+
         if 'client' not in self.db:
             self.db['client'] = ''
+
         self.write_current_settings_to_hardware()
 
     def _create_and_configure_broker_client(self):

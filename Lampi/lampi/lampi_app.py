@@ -17,6 +17,9 @@ from kivy.clock import Clock
 from paho.mqtt.client import Client
 from lamp_common import *
 
+
+MQTT_CLIENT_ID = "lampi_ui"
+
 class Color(Enum):
     GRAY = (0.5, 0.5, 0.5, 1)
     RED = (1, 0, 0, 1)
@@ -98,7 +101,14 @@ class LampiApp(App):
         return layout
 
     def on_start(self):
-        self.set_up_network_popup()
+        # MQTT
+        self.mqtt = Client(client_id=MQTT_CLIENT_ID)
+        self.mqtt.enable_logger()
+        self.mqtt.connect(MQTT_BROKER_HOST, port=MQTT_BROKER_PORT, keepalive=MQTT_BROKER_KEEP_ALIVE_SECS)
+        self.mqtt.loop_start()
+
+        # Popups
+        self.setup_network_popup()
 
     def update_bpm_label(self, instance, value):
         self.bpm_label.text = f"BPM: {int(value)}"
@@ -110,14 +120,17 @@ class LampiApp(App):
         self.publish_state_change()
 
     def publish_state_change(self):
-        msg = {"client": "ui", "groove": self.groove, "bpm": self.bpm_label.text}
-        print(msg)
+        msg = {"client": MQTT_CLIENT_ID, "groove": self.groove, "bpm": self.bpm_label.text}
+        
+        self.mqtt.publish(TOPIC_SET_LAMP_CONFIG, json.dumps(msg).encode('utf-8'), qos=1)
 
-    def set_up_network_popup(self):
+    def setup_network_popup(self):
         self.pi = pigpio.pi()
         self.pi.set_mode(self.NETWORK_PIN, pigpio.INPUT)
         self.pi.set_pull_up_down(self.NETWORK_PIN, pigpio.PUD_UP)
+
         Clock.schedule_interval(self._poll_GPIO, 0.05)
+
         self.network_popup = self._build_network_popup()
         self.network_popup.bind(on_open=self.update_popup_ip_address)
 
