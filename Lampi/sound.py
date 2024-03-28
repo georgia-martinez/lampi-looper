@@ -7,7 +7,7 @@ class Sound():
     mixer.init()
 
     def __init__(self, sound_name):
-        sound_file = os.path.join(os.getcwd(), "Lampi/lampi/sounds", sound_name + ".WAV")
+        sound_file = os.path.join(os.getcwd(), "Lampi/sounds", sound_name + ".WAV")
         self.sound = Sound.mixer.Sound(sound_file)
 
     def play(self):

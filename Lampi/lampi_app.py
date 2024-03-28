@@ -1,7 +1,7 @@
 import platform
 import json
 import pigpio
-import lampi.lampi_util
+import lampi_util
 
 from enum import Enum
 from math import fabs
@@ -15,10 +15,7 @@ from kivy.uix.label import Label
 from kivy.properties import BooleanProperty
 from kivy.clock import Clock
 from paho.mqtt.client import Client
-from lamp_common import *
-
-
-MQTT_CLIENT_ID = "lampi_ui"
+from lampi_common import *
 
 class Color(Enum):
     GRAY = (0.5, 0.5, 0.5, 1)
@@ -28,6 +25,10 @@ class Color(Enum):
 
     def id(self):
         return list(Color).index(self)
+
+    @classmethod
+    def get_color(cls, color_id):
+        return list(cls)[color_id]
 
 class BeatButton(Button):
 
@@ -73,16 +74,15 @@ class LampiApp(App):
         super().__init__(**kwargs)
 
         # MQTT
-        self.mqtt = Client(client_id=MQTT_CLIENT_ID)
+        self.mqtt = Client(client_id="lampi_ui")
         self.mqtt.enable_logger()
         self.mqtt.connect(MQTT_BROKER_HOST, port=MQTT_BROKER_PORT, keepalive=MQTT_BROKER_KEEP_ALIVE_SECS)
         self.mqtt.loop_start()
 
-        # Popups
+        # Network popup
         self.setup_network_popup()
 
     def build(self):
-        
         layout = BoxLayout(orientation="vertical")
 
         # Adding the bpm slider and label
@@ -122,9 +122,9 @@ class LampiApp(App):
         self.publish_state_change()
 
     def publish_state_change(self):
-        msg = {"client": MQTT_CLIENT_ID, "groove": self.groove, "bpm": self.bpm_label.text}
+        msg = {"groove": self.groove, "bpm": self.bpm_label.text}
         
-        self.mqtt.publish(TOPIC_SET_LAMP_CONFIG, json.dumps(msg).encode('utf-8'), qos=1)
+        self.mqtt.publish(TOPIC_UI_UPDATE, json.dumps(msg).encode('utf-8'), qos=1)
 
     def setup_network_popup(self):
         self.pi = pigpio.pi()
