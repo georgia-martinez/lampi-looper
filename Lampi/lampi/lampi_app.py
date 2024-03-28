@@ -64,10 +64,22 @@ class BeatButton(Button):
 class LampiApp(App):
 
     NETWORK_PIN = 17
-    network_butttoggle_colored = BooleanProperty(False)
+    network_button_pressed = BooleanProperty(False)
     network_popup_open = BooleanProperty(False)
 
     groove = [0 for _ in range(16)]
+
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+
+        # MQTT
+        self.mqtt = Client(client_id=MQTT_CLIENT_ID)
+        self.mqtt.enable_logger()
+        self.mqtt.connect(MQTT_BROKER_HOST, port=MQTT_BROKER_PORT, keepalive=MQTT_BROKER_KEEP_ALIVE_SECS)
+        self.mqtt.loop_start()
+
+        # Popups
+        self.setup_network_popup()
 
     def build(self):
         
@@ -99,16 +111,6 @@ class LampiApp(App):
         layout.add_widget(self.button_grid)
 
         return layout
-
-    def on_start(self):
-        # MQTT
-        self.mqtt = Client(client_id=MQTT_CLIENT_ID)
-        self.mqtt.enable_logger()
-        self.mqtt.connect(MQTT_BROKER_HOST, port=MQTT_BROKER_PORT, keepalive=MQTT_BROKER_KEEP_ALIVE_SECS)
-        self.mqtt.loop_start()
-
-        # Popups
-        self.setup_network_popup()
 
     def update_bpm_label(self, instance, value):
         self.bpm_label.text = f"BPM: {int(value)}"
@@ -147,7 +149,7 @@ class LampiApp(App):
         msg = "{}: {}\nDeviceID: {}".format(interface, ipaddr, deviceid)
         instance.content.text = msg
 
-    def on_network_butttoggle_colored(self, instance, value):
+    def on_network_button_pressed(self, instance, value):
         if value:
             if not self.network_popup_open:
                 self.network_popup.open()
@@ -157,4 +159,4 @@ class LampiApp(App):
                 self.network_popup_open = False
 
     def _poll_GPIO(self, dt):
-        self.network_butttoggle_colored = not self.pi.read(self.NETWORK_PIN) # gpio17 is the rightmost button
+        self.network_button_pressed = not self.pi.read(self.NETWORK_PIN) # gpio17 is the rightmost button

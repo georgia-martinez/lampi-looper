@@ -20,7 +20,7 @@ def client_state_topic(client_id):
 def broker_bridge_connection_topic():
     device_id = get_device_id()
     return '$SYS/broker/connection/{}_broker/state'.format(device_id)
-
+    
 
 # MQTT Broker Connection info
 MQTT_VERSION = paho.mqtt.client.MQTTv311
