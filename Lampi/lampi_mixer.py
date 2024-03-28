@@ -8,6 +8,7 @@ from enum import Enum, auto
 from lampi_app import Color
 from lampi_common import *
 
+
 class SoundFile():
     mixer = pygame.mixer
     mixer.init()
@@ -18,6 +19,7 @@ class SoundFile():
 
     def play(self):
         self.sound.play()
+
 
 class LampiMixer:
     def __init__(self):
@@ -36,11 +38,26 @@ class LampiMixer:
 
         pygame.init()
 
-        # MQTT
-        self.mqtt = Client(client_id="lampi_mixer")
-        self.mqtt.enable_logger()
-        self.mqtt.connect(MQTT_BROKER_HOST, port=MQTT_BROKER_PORT, keepalive=MQTT_BROKER_KEEP_ALIVE_SECS)
-        self.mqtt.loop_start()
+        self.client = self.create_client()
+
+    def create_client(self):
+        client = mqtt.Client(client_id="lampi_mixer", protocol=MQTT_VERSION)
+        client.enable_logger()
+        client.connect(MQTT_BROKER_HOST, port=MQTT_BROKER_PORT, keepalive=MQTT_BROKER_KEEP_ALIVE_SECS)
+        client.on_connect = self.on_connect
+        client.message_callback_add(TOPIC_UI_UPDATE, self.update_settings)
+        client.loop_start()
+
+        return client
+
+    def on_connect(self, client, userdata, rc, unknown):
+        self._client.subscribe(TOPIC_UI_UPDATE, qos=1)
+
+    def update_settings(self, client, userdata, msg):
+        msg = json.loads(msg.payload.decode('utf-8'))
+
+        self.loop = msg["loop"]
+        self.set_bpm(msg["bpm"])
 
     def set_bpm(self, bpm):
         self.bpm = bpm
@@ -78,6 +95,7 @@ class LampiMixer:
 
     def led_update_msg(self, r, g, b):
         return {"r": r, "g": g, "b": b}
+
 
 if __name__ == "__main__":
     mixer = LampiMixer()
