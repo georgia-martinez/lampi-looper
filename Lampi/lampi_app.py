@@ -46,7 +46,7 @@ class BeatButton(Button):
 
         self.color_id = 0
         self.curr_color = Color.GRAY
-        self._set_color()
+        self.set_color()
 
     def toggle_color(self):
         if self.color_id != len(self.colors) - 1:
@@ -54,13 +54,15 @@ class BeatButton(Button):
         else:
             self.color_id = 0
 
-        self._set_color()
+        self.set_color()
 
-    def _set_color(self):
+    def set_color(self):
         new_color = self.colors[self.color_id]
 
         self.background_color = new_color.value
         self.curr_color = new_color
+
+MQTT_CLIENT_ID = "lampi_ui"
 
 class LampiApp(App):
 
@@ -68,19 +70,37 @@ class LampiApp(App):
     network_button_pressed = BooleanProperty(False)
     network_popup_open = BooleanProperty(False)
 
-    groove = [0 for _ in range(16)]
-
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
 
+        self.reset_loop()
+
         # MQTT
-        self.mqtt = Client(client_id="lampi_ui")
-        self.mqtt.enable_logger()
-        self.mqtt.connect(MQTT_BROKER_HOST, port=MQTT_BROKER_PORT, keepalive=MQTT_BROKER_KEEP_ALIVE_SECS)
-        self.mqtt.loop_start()
+        self.client = self.create_client()
 
         # Network popup
         self.setup_network_popup()
+
+    def create_client(self):
+        client = mqtt.Client(client_id=MQTT_CLIENT_ID)
+        client.enable_logger()
+        client.connect(MQTT_BROKER_HOST, port=MQTT_BROKER_PORT, keepalive=MQTT_BROKER_KEEP_ALIVE_SECS)
+        client.on_connect = self.on_connect
+        client.message_callback_add(TOPIC_UI_UPDATE, self.update_ui)
+        client.loop_start()
+
+        return client
+
+    def on_connect(self, client, userdata, rc, unknown):
+        self._client.subscribe(TOPIC_UI_UPDATE, qos=1)
+
+    def update_ui(self, client, userdata, msg):
+        msg = json.loads(msg.payload.decode('utf-8'))
+
+        if msg["client"] == MQTT_CLIENT_ID
+            return
+
+        # TODO: update ui
 
     def build(self):
         layout = BoxLayout(orientation="vertical")
@@ -112,19 +132,26 @@ class LampiApp(App):
 
         return layout
 
+    def reset_loop(self):
+        self.loop = [0 for _ in range(16)]
+        self.publish_state_change()
+
     def update_bpm_label(self, instance, value):
         self.bpm_label.text = f"BPM: {int(value)}"
         self.publish_state_change()
 
     def on_beat_button_press(self, instance):
         instance.toggle_color()
-        self.groove[instance.id] = instance.curr_color.id()
+        self.loop[instance.id] = instance.curr_color.id()
         self.publish_state_change()
 
     def publish_state_change(self):
-        msg = {"groove": self.groove, "bpm": self.bpm_label.text}
+        msg = self.ui_update_msg(self.loop, self.bpm_label.text)
         
         self.mqtt.publish(TOPIC_UI_UPDATE, json.dumps(msg).encode('utf-8'), qos=1)
+
+    def ui_update_msg(self, loop, bpm):
+        return {"client": MQTT_CLIENT_ID, "loop": loop, "bpm": bpm}
 
     def setup_network_popup(self):
         self.pi = pigpio.pi()
@@ -133,10 +160,10 @@ class LampiApp(App):
 
         Clock.schedule_interval(self._poll_GPIO, 0.05)
 
-        self.network_popup = self._build_network_popup()
+        self.network_popup = self.build_network_popup()
         self.network_popup.bind(on_open=self.update_popup_ip_address)
 
-    def _build_network_popup(self):
+    def build_network_popup(self):
         return Popup(title='Network Status',
                      content=Label(text='IP ADDRESS WILL GO HERE'),
                      size_hint=(1, 1), auto_dismiss=False)
