@@ -35,6 +35,8 @@ class LampiDriver(object):
 class LampiService(object):
     def __init__(self):
         self.lampi_driver = LampiDriver()
+        self.lampi_driver.change_color(0, 0, 0) # turn off
+
         self._setup_db()
         self._client = self._create_broker_client()
 
