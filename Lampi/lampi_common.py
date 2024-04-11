@@ -5,7 +5,8 @@ DEVICE_ID_FILENAME = '/sys/class/net/eth0/address'
 # MQTT Topic Names
 TOPIC_UI_UPDATE = "ui_update"
 TOPIC_LED_UPDATE = "led_update"
- 
+TOPIC_TOGGLE_PLAY = "toggle_play" 
+
 # MQTT Broker Connection info
 MQTT_VERSION = paho.mqtt.client.MQTTv311
 MQTT_BROKER_HOST = "localhost"

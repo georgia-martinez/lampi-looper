@@ -39,7 +39,7 @@ class LampiService(object):
         self.lampi_driver = LampiDriver()
         self.lampi_driver.change_color(0, 0, 0) # turn off
 
-        #self.lampi_mixer = LampiMixer()
+        self.lampi_mixer = LampiMixer()
 
         self.setup_db()
         self.client = self.create_client()
@@ -64,6 +64,7 @@ class LampiService(object):
 
         client.message_callback_add(TOPIC_LED_UPDATE, self.change_led_color)
         client.message_callback_add(TOPIC_UI_UPDATE, self.update_db)
+        client.message_callback_add(TOPIC_TOGGLE_PLAY, self.toggle_play)
 
         return client
 
@@ -93,6 +94,7 @@ class LampiService(object):
     def on_connect(self, client, userdata, rc, unknown):
         self.client.subscribe(TOPIC_LED_UPDATE, qos=0)
         self.client.subscribe(TOPIC_UI_UPDATE, qos=0)
+        self.client.subscribe(TOPIC_TOGGLE_PLAY, qos=0)
 
     def change_led_color(self, client, userdata, msg):
         msg = json.loads(msg.payload.decode('utf-8'))
@@ -108,6 +110,16 @@ class LampiService(object):
         self.db["bpm"] = msg["bpm"]
 
         self.db.sync()
+
+    def toggle_play(self, client, userdata, msg):
+        msg = json.loads(msg.payload.decode('utf-8'))
+        print(msg["play"])
+
+        if msg["play"]:
+            self.lampi_mixer.play()
+        else:
+            pass #TODO: pause the mixer
+
 
 if __name__ == "__main__":
     lampi = LampiService().serve()

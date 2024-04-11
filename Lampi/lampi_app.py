@@ -67,6 +67,9 @@ MQTT_CLIENT_ID = "lampi_ui"
 
 class LampiApp(App):
 
+    PLAY_PIN = 27 
+    play_button_pressed = BooleanProperty(False)
+
     NETWORK_PIN = 17
     network_button_pressed = BooleanProperty(False)
     network_popup_open = BooleanProperty(False)
@@ -75,11 +78,11 @@ class LampiApp(App):
         super().__init__(**kwargs)
 
         self.loop = [0 for _ in range(16)]
+        self.play = False
 
-        # MQTT
         self.client = self.create_client()
 
-        # Network popup
+        self.setup_face_buttons()
         self.setup_network_popup()
 
     def create_client(self):
@@ -149,19 +152,24 @@ class LampiApp(App):
         self.publish_state_change()
 
     def publish_state_change(self):
-        msg = self.ui_update_msg(self.loop, self.bpm_label.text)
-        print("hello???")
-        
+        bpm_val = ''.join(filter(str.isdigit, self.bpm_label.text))
+        msg = self.ui_update_msg(self.loop, bpm_val)        
+
         self.client.publish(TOPIC_UI_UPDATE, json.dumps(msg).encode('utf-8'), qos=0)
 
     def ui_update_msg(self, loop, bpm):
         return {"client": MQTT_CLIENT_ID, "loop": loop, "bpm": bpm}
 
-    def setup_network_popup(self):
+    def setup_face_buttons(self):
         self.pi = pigpio.pi()
-        self.pi.set_mode(self.NETWORK_PIN, pigpio.INPUT)
-        self.pi.set_pull_up_down(self.NETWORK_PIN, pigpio.PUD_UP)
 
+        self.pi.set_mode(self.PLAY_PIN, pigpio.INPUT)
+        self.pi.set_pull_up_down(self.PLAY_PIN, pigpio.PUD_UP)        
+
+        self.pi.set_mode(self.NETWORK_PIN, pigpio.INPUT)
+        self.pi.set_pull_up_down(self.NETWORK_PIN, pigpio.PUD_UP)  
+
+    def setup_network_popup(self):
         Clock.schedule_interval(self._poll_GPIO, 0.05)
 
         self.network_popup = self.build_network_popup()
@@ -174,8 +182,8 @@ class LampiApp(App):
 
     def update_popup_ip_address(self, instance):
         interface = "wlan0"
-        ipaddr = lampi.lampi_util.get_ip_address(interface)
-        deviceid = lampi.lampi_util.get_device_id()
+        ipaddr = lampi_util.get_ip_address(interface)
+        deviceid = lampi_util.get_device_id()
 
         msg = "{}: {}\nDeviceID: {}".format(interface, ipaddr, deviceid)
         instance.content.text = msg
@@ -189,5 +197,19 @@ class LampiApp(App):
                 self.network_popup.dismiss()
                 self.network_popup_open = False
 
+    def on_play_button_pressed(self, instance, value):
+        if value:
+            self.play = not self.play
+
+            if self.play:
+                print("play")
+            else:
+                print("pause")
+
+            msg = {"play": self.play}
+            self.client.publish(TOPIC_TOGGLE_PLAY, json.dumps(msg).encode('utf-8'), qos=0)
+
+
     def _poll_GPIO(self, dt):
-        self.network_button_pressed = not self.pi.read(self.NETWORK_PIN) # gpio17 is the rightmost button
+        self.play_button_pressed = not self.pi.read(self.PLAY_PIN) # button 1
+        self.network_button_pressed = not self.pi.read(self.NETWORK_PIN) # button 4

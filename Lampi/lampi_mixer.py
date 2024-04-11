@@ -58,7 +58,7 @@ class LampiMixer:
         msg = json.loads(msg.payload.decode('utf-8'))
 
         self.loop = msg["loop"]
-        self.set_bpm(msg["bpm"])
+        self.set_bpm(int(msg["bpm"]))
 
     def set_bpm(self, bpm):
         self.bpm = bpm
