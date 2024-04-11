@@ -3,6 +3,8 @@ import time
 import json
 import os
 import paho.mqtt.client as mqtt
+import pigpio
+import colorsys
 
 from paho.mqtt.client import Client
 from enum import Enum, auto
@@ -24,7 +26,11 @@ class SoundFile():
 
 class LampiMixer:
     def __init__(self):
-        self.pause = None
+        self.lampi_driver = LampiDriver()
+        self.lampi_driver.change_color(0, 0, 0) # turn off
+
+        self.playing = False
+        self.pause_duration = None
         self.bpm = self.set_bpm(100)
         self.beats_per_measure = 4
 
@@ -44,15 +50,21 @@ class LampiMixer:
     def create_client(self):
         client = mqtt.Client(client_id="lampi_mixer", protocol=MQTT_VERSION)
         client.enable_logger()
+
         client.connect(MQTT_BROKER_HOST, port=MQTT_BROKER_PORT, keepalive=MQTT_BROKER_KEEP_ALIVE_SECS)
         client.on_connect = self.on_connect
+
         client.message_callback_add(TOPIC_UI_UPDATE, self.update_settings)
-        client.loop_start()
+        client.message_callback_add(TOPIC_TOGGLE_PLAY, self.toggle_play)
 
         return client
 
+    def serve(self):
+        self.client.loop_forever()
+
     def on_connect(self, client, userdata, rc, unknown):
         self.client.subscribe(TOPIC_UI_UPDATE, qos=0)
+        self.client.subscribe(TOPIC_TOGGLE_PLAY, qos=0)
 
     def update_settings(self, client, userdata, msg):
         msg = json.loads(msg.payload.decode('utf-8'))
@@ -60,13 +72,22 @@ class LampiMixer:
         self.loop = msg["loop"]
         self.set_bpm(int(msg["bpm"]))
 
+    def toggle_play(self, client, userdata, msg):
+        msg = json.loads(msg.payload.decode('utf-8'))
+
+        if msg["play"]:
+            self.play()
+        else:
+            self.playing = False
+
     def set_bpm(self, bpm):
         self.bpm = bpm
-        self.pause = 0.25 * (60 / bpm) 
+        self.pause_duration = 0.25 * (60 / bpm) 
 
     def play(self):
-        running = True
-        while running:
+        self.playing = True
+
+        while self.playing:
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     running = False
@@ -79,24 +100,18 @@ class LampiMixer:
                 
                 self.update_led(sound_id)
 
-                time.sleep(self.pause)
+                time.sleep(self.pause_duration)
 
         pygame.quit()
 
     def update_led(self, sound_id):
         if sound_id == 0:
-            msg = self.led_update_msg(0, 0, 0)
+            self.lampi_driver.change_color(0, 0, 0)
         else:
             color = Color.get_color(sound_id)
             r, g, b, _ = color.value
 
-            msg = self.led_update_msg(r, g, b)
-
-        self.client.publish(TOPIC_LED_UPDATE, json.dumps(msg).encode('utf-8'), qos=0)
-
-    def led_update_msg(self, r, g, b):
-        return {"r": r, "g": g, "b": b}
-
+            self.lampi_driver.change_color(r, g, b)
 
 if __name__ == "__main__":
     mixer = LampiMixer()
@@ -108,4 +123,4 @@ if __name__ == "__main__":
         2, 0, 1, 0,
     ]
 
-    mixer.play()
+    mixer.serve()

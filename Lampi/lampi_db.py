@@ -2,45 +2,17 @@
 
 import time
 import json
-import pigpio
 import paho.mqtt.client as mqtt
 import shelve
-import colorsys
 
-from lampi_mixer import LampiMixer
 from lampi_common import *
 
-MQTT_CLIENT_ID = "lampi_service"
+MQTT_CLIENT_ID = "lampi_db"
 MAX_STARTUP_WAIT_SECS = 10.0
 
-PIN_R = 19
-PIN_G = 26
-PIN_B = 13
-PINS = [PIN_R, PIN_G, PIN_B]
 
-class LampiDriver(object):
+class LampiDB(object):
     def __init__(self):
-        self._gpio = pigpio.pi()
-        for color_pin in PINS:
-            self._gpio.set_mode(color_pin, pigpio.OUTPUT)
-            self._gpio.set_PWM_dutycycle(color_pin, 0)
-            self._gpio.set_PWM_frequency(color_pin, 1000)
-            self._gpio.set_PWM_range(color_pin, 1000)
-
-    def change_color(self, r, g, b):
-        self._gpio.write(PIN_R, r)
-        self._gpio.write(PIN_G, g)
-        self._gpio.write(PIN_B, b)
-
-
-class LampiService(object):
-
-    def __init__(self):
-        self.lampi_driver = LampiDriver()
-        self.lampi_driver.change_color(0, 0, 0) # turn off
-
-        self.lampi_mixer = LampiMixer()
-
         self.setup_db()
         self.client = self.create_client()
 
@@ -62,9 +34,7 @@ class LampiService(object):
         client.enable_logger()
         client.on_connect = self.on_connect
 
-        client.message_callback_add(TOPIC_LED_UPDATE, self.change_led_color)
         client.message_callback_add(TOPIC_UI_UPDATE, self.update_db)
-        client.message_callback_add(TOPIC_TOGGLE_PLAY, self.toggle_play)
 
         return client
 
@@ -92,13 +62,7 @@ class LampiService(object):
         self.client.loop_forever()
 
     def on_connect(self, client, userdata, rc, unknown):
-        self.client.subscribe(TOPIC_LED_UPDATE, qos=0)
         self.client.subscribe(TOPIC_UI_UPDATE, qos=0)
-        self.client.subscribe(TOPIC_TOGGLE_PLAY, qos=0)
-
-    def change_led_color(self, client, userdata, msg):
-        msg = json.loads(msg.payload.decode('utf-8'))
-        self.lampi_driver.change_color(msg["r"], msg["g"], msg["b"])
 
     def update_db(self, client, userdata, msg):
         msg = json.loads(msg.payload.decode('utf-8'))
@@ -111,15 +75,6 @@ class LampiService(object):
 
         self.db.sync()
 
-    def toggle_play(self, client, userdata, msg):
-        msg = json.loads(msg.payload.decode('utf-8'))
-        print(msg["play"])
-
-        if msg["play"]:
-            self.lampi_mixer.play()
-        else:
-            pass #TODO: pause the mixer
-
 
 if __name__ == "__main__":
-    lampi = LampiService().serve()
+    lampi_db = LampiDB().serve()
