@@ -40,9 +40,9 @@ class BeatButton(Button):
 
         self.colors = [
             Color.GRAY,
-            Color.RED,
-            Color.GREEN,
             Color.BLUE,
+            Color.GREEN,
+            Color.RED,
         ]
 
         self.color_id = 0
@@ -68,10 +68,11 @@ MQTT_CLIENT_ID = "lampi_ui"
 class LampiApp(App):
 
     PLAY_PIN = 27 
-    play_button_pressed = BooleanProperty(False)
-
     NETWORK_PIN = 17
+
+    play_button_pressed = BooleanProperty(False)
     network_button_pressed = BooleanProperty(False)
+
     network_popup_open = BooleanProperty(False)
 
     def __init__(self, **kwargs):

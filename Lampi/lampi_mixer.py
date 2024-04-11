@@ -38,14 +38,18 @@ class LampiMixer:
 
         self.sound_map = {
             0: None,
-            1: SoundFile("hi_hat"),
+            1: SoundFile("tom"),
             2: SoundFile("snare"),
-            3: SoundFile("tom"),
+            3: SoundFile("hi_hat"),
         }
 
         pygame.init()
 
         self.client = self.create_client()
+
+    def set_bpm(self, bpm):
+        self.bpm = bpm
+        self.pause_duration = 0.25 * (60 / bpm)
 
     def create_client(self):
         client = mqtt.Client(client_id="lampi_mixer", protocol=MQTT_VERSION)
@@ -78,20 +82,12 @@ class LampiMixer:
         if msg["play"]:
             self.play()
         else:
-            self.playing = False
-
-    def set_bpm(self, bpm):
-        self.bpm = bpm
-        self.pause_duration = 0.25 * (60 / bpm) 
+            self.playing = False 
 
     def play(self):
         self.playing = True
 
         while self.playing:
-            for event in pygame.event.get():
-                if event.type == pygame.QUIT:
-                    running = False
-
             for beat in range(len(self.loop)):
                 sound_id = self.loop[beat]
 
@@ -115,12 +111,4 @@ class LampiMixer:
 
 if __name__ == "__main__":
     mixer = LampiMixer()
-
-    mixer.loop = [
-        3, 0, 1, 0,
-        2, 0, 1, 0,
-        3, 0, 1, 0,
-        2, 0, 1, 0,
-    ]
-
     mixer.serve()
