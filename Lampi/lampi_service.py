@@ -39,7 +39,7 @@ class LampiService(object):
         self.lampi_driver = LampiDriver()
         self.lampi_driver.change_color(0, 0, 0) # turn off
 
-        self.lampi_mixer = LampiMixer()
+        #self.lampi_mixer = LampiMixer()
 
         self.setup_db()
         self.client = self.create_client()
