@@ -2,6 +2,7 @@ import platform
 import json
 import pigpio
 import lampi_util
+import paho.mqtt.client as mqtt
 
 from enum import Enum
 from math import fabs
@@ -73,7 +74,7 @@ class LampiApp(App):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
 
-        self.reset_loop()
+        self.loop = [0 for _ in range(16)]
 
         # MQTT
         self.client = self.create_client()
@@ -92,12 +93,12 @@ class LampiApp(App):
         return client
 
     def on_connect(self, client, userdata, rc, unknown):
-        self._client.subscribe(TOPIC_UI_UPDATE, qos=1)
+        self.client.subscribe(TOPIC_UI_UPDATE, qos=1)
 
     def update_ui(self, client, userdata, msg):
         msg = json.loads(msg.payload.decode('utf-8'))
 
-        if msg["client"] == MQTT_CLIENT_ID
+        if msg["client"] == MQTT_CLIENT_ID:
             return
 
         # TODO: update ui
@@ -130,6 +131,8 @@ class LampiApp(App):
 
         layout.add_widget(self.button_grid)
 
+        self.reset_loop()
+
         return layout
 
     def reset_loop(self):
@@ -147,8 +150,9 @@ class LampiApp(App):
 
     def publish_state_change(self):
         msg = self.ui_update_msg(self.loop, self.bpm_label.text)
+        print("hello???")
         
-        self.mqtt.publish(TOPIC_UI_UPDATE, json.dumps(msg).encode('utf-8'), qos=1)
+        self.client.publish(TOPIC_UI_UPDATE, json.dumps(msg).encode('utf-8'), qos=1)
 
     def ui_update_msg(self, loop, bpm):
         return {"client": MQTT_CLIENT_ID, "loop": loop, "bpm": bpm}
