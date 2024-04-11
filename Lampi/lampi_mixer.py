@@ -1,6 +1,7 @@
 import pygame
 import time
 import json
+import os
 import paho.mqtt.client as mqtt
 
 from paho.mqtt.client import Client
@@ -15,7 +16,7 @@ class SoundFile():
 
     def __init__(self, sound_name):
         sound_file = os.path.join(os.getcwd(), "Lampi/sounds", sound_name + ".WAV")
-        self.sound = Sound.mixer.Sound(sound_file)
+        self.sound = SoundFile.mixer.Sound(sound_file)
 
     def play(self):
         self.sound.play()
@@ -51,7 +52,7 @@ class LampiMixer:
         return client
 
     def on_connect(self, client, userdata, rc, unknown):
-        self._client.subscribe(TOPIC_UI_UPDATE, qos=1)
+        self.client.subscribe(TOPIC_UI_UPDATE, qos=0)
 
     def update_settings(self, client, userdata, msg):
         msg = json.loads(msg.payload.decode('utf-8'))
@@ -91,7 +92,7 @@ class LampiMixer:
 
             msg = self.led_update_msg(r, g, b)
 
-        self.mqtt.publish(TOPIC_LED_UPDATE, json.dumps(msg).encode('utf-8'), qos=1)
+        self.client.publish(TOPIC_LED_UPDATE, json.dumps(msg).encode('utf-8'), qos=0)
 
     def led_update_msg(self, r, g, b):
         return {"r": r, "g": g, "b": b}

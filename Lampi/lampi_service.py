@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+
 import time
 import json
 import pigpio
@@ -12,13 +13,12 @@ from lampi_common import *
 MQTT_CLIENT_ID = "lampi_service"
 MAX_STARTUP_WAIT_SECS = 10.0
 
+PIN_R = 19
+PIN_G = 26
+PIN_B = 13
+PINS = [PIN_R, PIN_G, PIN_B]
 
 class LampiDriver(object):
-    PIN_R = 19
-    PIN_G = 26
-    PIN_B = 13
-    PINS = [PIN_R, PIN_G, PIN_B]
-
     def __init__(self):
         self._gpio = pigpio.pi()
         for color_pin in PINS:
@@ -91,14 +91,14 @@ class LampiService(object):
         self.client.loop_forever()
 
     def on_connect(self, client, userdata, rc, unknown):
-        self.client.subscribe(TOPIC_LED_UPDATE, qos=1)
-        self.client.subscribe(TOPIC_UI_UPDATE, qos=1)
+        self.client.subscribe(TOPIC_LED_UPDATE, qos=0)
+        self.client.subscribe(TOPIC_UI_UPDATE, qos=0)
 
     def change_led_color(self, client, userdata, msg):
         msg = json.loads(msg.payload.decode('utf-8'))
         self.lampi_driver.change_color(msg["r"], msg["g"], msg["b"])
 
-     def update_db(self, client, userdata, msg):
+    def update_db(self, client, userdata, msg):
         msg = json.loads(msg.payload.decode('utf-8'))
 
         if msg["client"] == MQTT_CLIENT_ID:

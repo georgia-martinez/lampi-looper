@@ -93,7 +93,7 @@ class LampiApp(App):
         return client
 
     def on_connect(self, client, userdata, rc, unknown):
-        self.client.subscribe(TOPIC_UI_UPDATE, qos=1)
+        self.client.subscribe(TOPIC_UI_UPDATE, qos=0)
 
     def update_ui(self, client, userdata, msg):
         msg = json.loads(msg.payload.decode('utf-8'))
@@ -152,7 +152,7 @@ class LampiApp(App):
         msg = self.ui_update_msg(self.loop, self.bpm_label.text)
         print("hello???")
         
-        self.client.publish(TOPIC_UI_UPDATE, json.dumps(msg).encode('utf-8'), qos=1)
+        self.client.publish(TOPIC_UI_UPDATE, json.dumps(msg).encode('utf-8'), qos=0)
 
     def ui_update_msg(self, loop, bpm):
         return {"client": MQTT_CLIENT_ID, "loop": loop, "bpm": bpm}
