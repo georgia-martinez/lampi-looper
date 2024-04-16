@@ -3,8 +3,8 @@ import json
 import pigpio
 import lampi_util
 import paho.mqtt.client as mqtt
+import threading
 
-from enum import Enum
 from math import fabs
 from kivy.app import App
 from kivy.uix.boxlayout import BoxLayout
@@ -16,20 +16,8 @@ from kivy.uix.label import Label
 from kivy.properties import BooleanProperty
 from kivy.clock import Clock
 from paho.mqtt.client import Client
+from lampi_mixer import LampiMixer
 from lampi_common import *
-
-class Color(Enum):
-    GRAY = (0.5, 0.5, 0.5, 1)
-    RED = (1, 0, 0, 1)
-    GREEN = (0, 1, 0, 1)
-    BLUE = (0, 0, 1, 1)
-
-    def id(self):
-        return list(Color).index(self)
-
-    @classmethod
-    def get_color(cls, color_id):
-        return list(cls)[color_id]
 
 class BeatButton(Button):
 
@@ -79,12 +67,14 @@ class LampiApp(App):
         super().__init__(**kwargs)
 
         self.loop = [0 for _ in range(16)]
-        self.play = False
 
         self.client = self.create_client()
 
         self.setup_face_buttons()
         self.setup_network_popup()
+
+        self.mixer = LampiMixer()
+        self.play_flag = threading.Event()
 
     def create_client(self):
         client = mqtt.Client(client_id=MQTT_CLIENT_ID)
@@ -98,9 +88,6 @@ class LampiApp(App):
 
     def on_connect(self, client, userdata, rc, unknown):
         self.client.subscribe(TOPIC_UI_UPDATE, qos=0)
-
-        msg = {"play": self.play}
-        self.client.publish(TOPIC_TOGGLE_PLAY, json.dumps(msg).encode('utf-8'), qos=0)
 
     def update_ui(self, client, userdata, msg):
         msg = json.loads(msg.payload.decode('utf-8'))
@@ -202,17 +189,15 @@ class LampiApp(App):
                 self.network_popup_open = False
 
     def on_play_button_pressed(self, instance, value):
-        if value:
-            self.play = not self.play
-
-            if self.play:
-                print("play")
+        if value:        
+            if self.play_flag.is_set():
+                self.play_flag.clear()
+                
             else:
-                print("pause")
+                self.play_flag.set()
 
-            msg = {"play": self.play}
-            self.client.publish(TOPIC_TOGGLE_PLAY, json.dumps(msg).encode('utf-8'), qos=0)
-
+                play_thread = threading.Thread(target=self.mixer.play, args=(self.play_flag,))
+                play_thread.start()
 
     def _poll_GPIO(self, dt):
         self.play_button_pressed = not self.pi.read(self.PLAY_PIN) # button 1

@@ -7,10 +7,10 @@ import os
 import paho.mqtt.client as mqtt
 import pigpio
 import colorsys
+import threading
 
 from paho.mqtt.client import Client
 from enum import Enum, auto
-from lampi_app import Color
 from lampi_common import *
 from lampi_driver import LampiDriver
 
@@ -31,7 +31,6 @@ class LampiMixer:
         self.lampi_driver = LampiDriver()
         self.lampi_driver.change_color(0, 0, 0) # turn off
 
-        self.playing = False
         self.pause_duration = None
         self.bpm = self.set_bpm(100)
         self.beats_per_measure = 4
@@ -61,7 +60,8 @@ class LampiMixer:
         client.on_connect = self.on_connect
 
         client.message_callback_add(TOPIC_UI_UPDATE, self.update_settings)
-        client.message_callback_add(TOPIC_TOGGLE_PLAY, self.toggle_play)
+
+        client.loop_start()
 
         return client
 
@@ -70,7 +70,6 @@ class LampiMixer:
 
     def on_connect(self, client, userdata, rc, unknown):
         self.client.subscribe(TOPIC_UI_UPDATE, qos=0)
-        self.client.subscribe(TOPIC_TOGGLE_PLAY, qos=0)
 
     def update_settings(self, client, userdata, msg):
         msg = json.loads(msg.payload.decode('utf-8'))
@@ -78,20 +77,8 @@ class LampiMixer:
         self.loop = msg["loop"]
         self.set_bpm(int(msg["bpm"]))
 
-    def toggle_play(self, client, userdata, msg):
-        msg = json.loads(msg.payload.decode('utf-8'))
-
-        if msg["play"]:
-            print("play")
-            self.play()
-        else:
-            print("pause")
-            self.playing = False 
-
-    def play(self):
-        self.playing = True
-
-        while self.playing:
+    def play(self, play_flag):
+        while play_flag.is_set():
             for beat in range(len(self.loop)):
                 sound_id = self.loop[beat]
 
@@ -112,6 +99,3 @@ class LampiMixer:
             r, g, b, _ = color.value
 
             self.lampi_driver.change_color(r, g, b)
-
-if __name__ == "__main__":
-    mixer = LampiMixer().serve()
