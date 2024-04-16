@@ -99,6 +99,9 @@ class LampiApp(App):
     def on_connect(self, client, userdata, rc, unknown):
         self.client.subscribe(TOPIC_UI_UPDATE, qos=0)
 
+        msg = {"play": self.play}
+        self.client.publish(TOPIC_TOGGLE_PLAY, json.dumps(msg).encode('utf-8'), qos=0)
+
     def update_ui(self, client, userdata, msg):
         msg = json.loads(msg.payload.decode('utf-8'))
 

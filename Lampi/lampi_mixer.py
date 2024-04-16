@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 import pygame
 import time
 import json
@@ -80,8 +82,10 @@ class LampiMixer:
         msg = json.loads(msg.payload.decode('utf-8'))
 
         if msg["play"]:
+            print("play")
             self.play()
         else:
+            print("pause")
             self.playing = False 
 
     def play(self):
@@ -110,5 +114,4 @@ class LampiMixer:
             self.lampi_driver.change_color(r, g, b)
 
 if __name__ == "__main__":
-    mixer = LampiMixer()
-    mixer.serve()
+    mixer = LampiMixer().serve()
