@@ -186,6 +186,8 @@ class LampiApp(App):
         if value:      
             for btn in self.buttons:
                 btn.reset_color()
+            
+            self.reset_loop()
 
     def setup_network_popup(self):
         Clock.schedule_interval(self._poll_GPIO, 0.05)
