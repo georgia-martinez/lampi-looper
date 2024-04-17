@@ -33,9 +33,7 @@ class BeatButton(Button):
             Color.RED,
         ]
 
-        self.color_id = 0
-        self.curr_color = Color.GRAY
-        self.set_color()
+        self.reset_color()
 
     def toggle_color(self):
         if self.color_id != len(self.colors) - 1:
@@ -43,6 +41,11 @@ class BeatButton(Button):
         else:
             self.color_id = 0
 
+        self.set_color()
+
+    def reset_color(self):
+        self.color_id = 0
+        self.curr_color = Color.GRAY
         self.set_color()
 
     def set_color(self):
@@ -56,9 +59,11 @@ MQTT_CLIENT_ID = "lampi_ui"
 class LampiApp(App):
 
     PLAY_PIN = 27 
+    CLEAR_PIN = 23 
     NETWORK_PIN = 17
 
     play_button_pressed = BooleanProperty(False)
+    clear_button_pressed = BooleanProperty(False)
     network_button_pressed = BooleanProperty(False)
 
     network_popup_open = BooleanProperty(False)
@@ -117,11 +122,14 @@ class LampiApp(App):
 
         # Adding the button grid
         self.button_grid = GridLayout(cols=4, spacing=5)
+        self.buttons = []
 
         for i in range(16):
             btn = BeatButton(i)
             btn.bind(on_press=self.on_beat_button_press)
+            
             self.button_grid.add_widget(btn)
+            self.buttons.append(btn)
 
         layout.add_widget(self.button_grid)
 
@@ -157,8 +165,27 @@ class LampiApp(App):
         self.pi.set_mode(self.PLAY_PIN, pigpio.INPUT)
         self.pi.set_pull_up_down(self.PLAY_PIN, pigpio.PUD_UP)        
 
+        self.pi.set_mode(self.CLEAR_PIN, pigpio.INPUT)
+        self.pi.set_pull_up_down(self.CLEAR_PIN, pigpio.PUD_UP)
+
         self.pi.set_mode(self.NETWORK_PIN, pigpio.INPUT)
         self.pi.set_pull_up_down(self.NETWORK_PIN, pigpio.PUD_UP)  
+
+    def on_play_button_pressed(self, instance, value):
+        if value: 
+            if self.play_flag.is_set():
+                self.play_flag.clear()
+                
+            else:
+                self.play_flag.set()
+
+                play_thread = threading.Thread(target=self.mixer.play, args=(self.play_flag,))
+                play_thread.start()
+
+    def on_clear_button_pressed(self, instance, value):
+        if value:      
+            for btn in self.buttons:
+                btn.reset_color()
 
     def setup_network_popup(self):
         Clock.schedule_interval(self._poll_GPIO, 0.05)
@@ -188,17 +215,7 @@ class LampiApp(App):
                 self.network_popup.dismiss()
                 self.network_popup_open = False
 
-    def on_play_button_pressed(self, instance, value):
-        if value:        
-            if self.play_flag.is_set():
-                self.play_flag.clear()
-                
-            else:
-                self.play_flag.set()
-
-                play_thread = threading.Thread(target=self.mixer.play, args=(self.play_flag,))
-                play_thread.start()
-
     def _poll_GPIO(self, dt):
-        self.play_button_pressed = not self.pi.read(self.PLAY_PIN) # button 1
+        self.play_button_pressed = not self.pi.read(self.PLAY_PIN)       # button 1
+        self.clear_button_pressed = not self.pi.read(self.CLEAR_PIN)     # button 2
         self.network_button_pressed = not self.pi.read(self.NETWORK_PIN) # button 4
