@@ -37,11 +37,9 @@ class LampiState():
     def _setup_mqtt(self):
         self.mqtt = Client(client_id=MQTT_CLIENT_ID)
         self.mqtt.enable_logger()
-        self.mqtt.will_set(client_state_topic(MQTT_CLIENT_ID), "0",
-                           qos=2, retain=True)
+        self.mqtt.will_set(client_state_topic(MQTT_CLIENT_ID), "0", qos=2, retain=True)
         self.mqtt.on_connect = self.on_mqtt_connect
-        self.mqtt.connect(MQTT_BROKER_HOST, port=MQTT_BROKER_PORT,
-                          keepalive=MQTT_BROKER_KEEP_ALIVE_SECS)
+        self.mqtt.connect(MQTT_BROKER_HOST, port=MQTT_BROKER_PORT, keepalive=MQTT_BROKER_KEEP_ALIVE_SECS)
         self.mqtt.loop_start()
 
 # region Change Subscriptions
@@ -102,17 +100,14 @@ class LampiState():
             self.publish_state_change()
 
     def on_mqtt_connect(self, client, userdata, flags, rc):
-        self.mqtt.publish(client_state_topic(MQTT_CLIENT_ID), b"1",
-                          qos=2, retain=True)
-        self.mqtt.message_callback_add(TOPIC_LAMP_CHANGE_NOTIFICATION,
-                                       self.receive_new_lamp_state)
+        self.mqtt.publish(client_state_topic(MQTT_CLIENT_ID), b"1", qos=2, retain=True)
+        self.mqtt.message_callback_add(TOPIC_LAMP_CHANGE_NOTIFICATION, self.receive_new_lamp_state)
         self.mqtt.subscribe(TOPIC_LAMP_CHANGE_NOTIFICATION, qos=1)
 
     def receive_new_lamp_state(self, client, userdata, message):
         new_state = json.loads(message.payload.decode('utf-8'))
 
-        if not self.got_initial_state or new_state.get(
-                'client', 'UNKNONW') != MQTT_CLIENT_ID:
+        if not self.got_initial_state or new_state.get('client', 'UNKNONW') != MQTT_CLIENT_ID:
             print(f"Got new state: {new_state}")
             self.got_initial_state = True
 
@@ -138,13 +133,14 @@ class LampiState():
                 self.emit('brightnessChange', self.brightness)
 
     def publish_state_change(self):
-
         config = {
             'color': {'h': self.hue, 's': self.saturation},
             'brightness': self.brightness,
             'on': self.isOn,
             'client': MQTT_CLIENT_ID}
+
         print(f"Publishing new state: {config}")
+
         self.mqtt.publish(TOPIC_SET_LAMP_CONFIG,
                           json.dumps(config).encode('utf-8'), qos=1,
                           retain=True)
