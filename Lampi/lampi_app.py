@@ -46,15 +46,16 @@ class BeatButton(Button):
         else:
             self.color_id = 0
 
-        self.set_color()
+        self.set_color(self.color_id)
 
     def reset_color(self):
         self.color_id = 0
         self.curr_color = Color.GRAY
-        self.set_color()
+        self.set_color(self.color_id)
 
-    def set_color(self):
-        new_color = self.colors[self.color_id]
+    def set_color(self, color_id):
+        self.color_id = color_id
+        new_color = self.colors[color_id]
 
         self.background_color = new_color.value
         self.curr_color = new_color
@@ -81,8 +82,6 @@ class LampiApp(App):
 
         self.loop = [0 for _ in range(self.beats_per_measure ** 2)]
 
-        self.client = self.create_client()
-
         self.setup_face_buttons()
         self.setup_network_popup()
 
@@ -108,7 +107,10 @@ class LampiApp(App):
         if msg["client"] == MQTT_CLIENT_ID:
             return
 
-        # TODO: update ui
+        self.loop = msg["loop"]
+        # self.update_bpm(msg["bpm"])
+
+        self.update_buttons()
 
     def build(self):
         layout = BoxLayout(orientation="vertical")
@@ -119,7 +121,8 @@ class LampiApp(App):
         self.bpm_slider.height = 50
 
         self.bpm_label = Label()
-        self.update_bpm_label(None, self.bpm_slider.value)
+        self.bpm_label.text = f"BPM: {100}"
+        self.set_pause_duration(100)
 
         self.bpm_label.size_hint_y = None
         self.bpm_label.height = 20
@@ -141,7 +144,7 @@ class LampiApp(App):
 
         layout.add_widget(self.button_grid)
 
-        self.reset_loop()
+        self.client = self.create_client()
 
         return layout
 
@@ -153,12 +156,19 @@ class LampiApp(App):
         self.bpm = bpm
         self.pause_duration = 0.25 * (60 / bpm)
 
+    def update_buttons(self):
+        for i, btn in zip(self.loop, self.buttons):
+            btn.set_color(i)
+
     def update_bpm_label(self, instance, value):
+        self.update_bpm(value)
+
+    def update_bpm(self, value):
         bpm = int(value)
 
         self.bpm_label.text = f"BPM: {bpm}"
         self.set_pause_duration(bpm)
-        
+
         self.publish_state_change()
 
     def on_beat_button_press(self, instance):

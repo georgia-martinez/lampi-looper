@@ -25,12 +25,13 @@ class LampiDB(object):
         if "bpm" not in self.db:
             self.db["bpm"] = 100
 
+        print(self.db["loop"])
+        print(self.db["bpm"])
+
         self.db.sync()
 
     def create_client(self):
         client = mqtt.Client(client_id=MQTT_CLIENT_ID, protocol=MQTT_VERSION)
-        # client.will_set(client_state_topic(MQTT_CLIENT_ID), "0",
-        #                 qos=2, retain=True)
         client.enable_logger()
         client.on_connect = self.on_connect
 
@@ -63,6 +64,7 @@ class LampiDB(object):
 
     def on_connect(self, client, userdata, rc, unknown):
         self.client.subscribe(TOPIC_UI_UPDATE, qos=0)
+        self.publish_state_change()
 
     def update_db(self, client, userdata, msg):
         msg = json.loads(msg.payload.decode('utf-8'))
@@ -70,11 +72,21 @@ class LampiDB(object):
         if msg["client"] == MQTT_CLIENT_ID:
             return
 
+        print("updating db: " +str(msg))
+
         self.db["loop"] = msg["loop"]
         self.db["bpm"] = msg["bpm"]
 
         self.db.sync()
 
+    def publish_state_change(self):
+        msg = {
+            "client": MQTT_CLIENT_ID, 
+            "loop": self.db["loop"], 
+            "bpm": int(self.db["bpm"])
+        }
+
+        self.client.publish(TOPIC_UI_UPDATE, json.dumps(msg).encode('utf-8'), qos=1, retain=True)
 
 if __name__ == "__main__":
     lampi_db = LampiDB().serve()
