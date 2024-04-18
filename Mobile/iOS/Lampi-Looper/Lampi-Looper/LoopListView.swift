@@ -13,18 +13,28 @@ struct LoopListView: View {
     
     var body: some View {
         HStack {
+            // Upload button
+            Image(systemName: "square.and.arrow.up")
+                .padding()
+                .onTapGesture {
+                    
+                }
+            
+            // Loop name
             Text(loop.name)
+                .padding()
+            
             Spacer()
             
-            Button(action: {
-                // Toggle play/pause state
-                isPlaying.toggle()
-            }) {
-                // Use conditional rendering for the button icon
-                Image(systemName: isPlaying ? "pause.fill" : "play.fill")
-            }
-            .padding(.trailing) // Add some padding to the button
+            // Play button
+            Image(systemName: isPlaying ? "pause.fill" : "play.fill")
+                .padding()
+                .onTapGesture {
+                    isPlaying.toggle()
+                }
         }
         .padding(.vertical, 8)
     }
 }
+
+
