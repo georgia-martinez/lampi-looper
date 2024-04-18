@@ -1,3 +1,0 @@
-HOME=/home/pi
-@reboot pi sleep 10 && cd {{ repo_directory }}/Lampi && ./main.py
-

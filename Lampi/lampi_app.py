@@ -1,9 +1,14 @@
+#!/usr/bin/env python3
+
 import platform
 import json
 import pigpio
 import lampi_util
 import paho.mqtt.client as mqtt
-import threading
+import subprocess
+import time
+import signal
+import os
 
 from math import fabs
 from kivy.app import App
@@ -54,7 +59,7 @@ class BeatButton(Button):
         self.background_color = new_color.value
         self.curr_color = new_color
 
-MQTT_CLIENT_ID = "lampi_ui"
+MQTT_CLIENT_ID = "lampi_app"
 
 class LampiApp(App):
 
@@ -71,15 +76,18 @@ class LampiApp(App):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
 
-        self.loop = [0 for _ in range(16)]
+        self.pause_duration = self.set_pause_duration(100)
+        self.beats_per_measure = 4
+
+        self.loop = [0 for _ in range(self.beats_per_measure ** 2)]
 
         self.client = self.create_client()
 
         self.setup_face_buttons()
         self.setup_network_popup()
 
-        self.mixer = LampiMixer()
-        self.play_flag = threading.Event()
+        self.play_flag = False
+        self.play_process = None
 
     def create_client(self):
         client = mqtt.Client(client_id=MQTT_CLIENT_ID)
@@ -141,8 +149,16 @@ class LampiApp(App):
         self.loop = [0 for _ in range(16)]
         self.publish_state_change()
 
+    def set_pause_duration(self, bpm):
+        self.bpm = bpm
+        self.pause_duration = 0.25 * (60 / bpm)
+
     def update_bpm_label(self, instance, value):
-        self.bpm_label.text = f"BPM: {int(value)}"
+        bpm = int(value)
+
+        self.bpm_label.text = f"BPM: {bpm}"
+        self.set_pause_duration(bpm)
+        
         self.publish_state_change()
 
     def on_beat_button_press(self, instance):
@@ -173,14 +189,21 @@ class LampiApp(App):
 
     def on_play_button_pressed(self, instance, value):
         if value: 
-            if self.play_flag.is_set():
-                self.play_flag.clear()
-                
-            else:
-                self.play_flag.set()
+            if self.play_flag:
+                os.kill(self.play_process.pid, signal.SIGTERM)
+                self.play_process.wait()
+                LampiMixer.lampi_driver.change_color(0, 0, 0)
 
-                play_thread = threading.Thread(target=self.mixer.play, args=(self.play_flag,))
-                play_thread.start()
+            else:
+                command = [
+                    "python3", 
+                    "/home/pi/lampi-looper/Lampi/playback.py", 
+                    json.dumps(self.loop),
+                    str(self.pause_duration)
+                ]
+                self.play_process = subprocess.Popen(command)
+
+            self.play_flag = not self.play_flag
 
     def on_clear_button_pressed(self, instance, value):
         if value:      
@@ -221,3 +244,6 @@ class LampiApp(App):
         self.play_button_pressed = not self.pi.read(self.PLAY_PIN)       # button 1
         self.clear_button_pressed = not self.pi.read(self.CLEAR_PIN)     # button 2
         self.network_button_pressed = not self.pi.read(self.NETWORK_PIN) # button 4
+
+if __name__ == "__main__":
+    LampiApp().run()
