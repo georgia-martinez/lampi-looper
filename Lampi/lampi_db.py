@@ -25,9 +25,6 @@ class LampiDB(object):
         if "bpm" not in self.db:
             self.db["bpm"] = 100
 
-        print(self.db["loop"])
-        print(self.db["bpm"])
-
         self.db.sync()
 
     def create_client(self):
@@ -71,8 +68,6 @@ class LampiDB(object):
 
         if msg["client"] == MQTT_CLIENT_ID:
             return
-
-        print("updating db: " +str(msg))
 
         self.db["loop"] = msg["loop"]
         self.db["bpm"] = msg["bpm"]

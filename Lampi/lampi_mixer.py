@@ -19,7 +19,7 @@ class SoundFile():
     mixer.init()
 
     def __init__(self, sound_name):
-        sound_file = os.path.join("/home/pi/connected-devices/Lampi/sounds/", sound_name + ".WAV")
+        sound_file = os.path.join("/home/pi/lampi-looper/Lampi/sounds/", sound_name + ".WAV")
         self.sound = SoundFile.mixer.Sound(sound_file)
 
     def play(self):

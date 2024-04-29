@@ -180,7 +180,7 @@ class LampiApp(App):
         bpm_val = ''.join(filter(str.isdigit, self.bpm_label.text))
         msg = self.ui_update_msg(self.loop, bpm_val)        
 
-        self.client.publish(TOPIC_UI_UPDATE, json.dumps(msg).encode('utf-8'), qos=0)
+        self.client.publish(TOPIC_UI_UPDATE, json.dumps(msg).encode('utf-8'), qos=1)
 
     def ui_update_msg(self, loop, bpm):
         return {"client": MQTT_CLIENT_ID, "loop": loop, "bpm": bpm}
