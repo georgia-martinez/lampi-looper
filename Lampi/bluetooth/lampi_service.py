@@ -1,7 +1,6 @@
 from pybleno import BlenoPrimaryService
-from on_off_characteristic import OnOffCharacteristic
-from hsv_characteristic import HSVCharacteristic
-from brightness_characteristic import BrightnessCharacteristic
+from loop_characteristic import LoopCharacteristic
+from bpm_characteristic import BpmCharacteristic
 
 from lampi_state import LampiState
 
@@ -15,9 +14,8 @@ class LampiService(BlenoPrimaryService):
         BlenoPrimaryService.__init__(self, {
             'uuid': self.uuid,
             'characteristics': [
-                HSVCharacteristic(self.lampi_state),
-                BrightnessCharacteristic(self.lampi_state),
-                OnOffCharacteristic(self.lampi_state)
+                BpmCharacteristic(self.lampi_state),
+                # LoopCharacteristic(self.lampi_state),
             ]
         })
         print("Started Lamp Service")

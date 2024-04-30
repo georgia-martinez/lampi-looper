@@ -5,16 +5,16 @@ import array
 import struct
 
 
-class OnOffCharacteristic(Characteristic):
+class LoopCharacteristic(Characteristic):
     def __init__(self, lampi_state: LampiState):
         Characteristic.__init__(self, {
-            'uuid': '0004A7D3-D8A4-4FEA-8174-1736E808C066',
+            'uuid': '0003A7D3-D8A4-4FEA-8174-1736E808C066',
             'properties': ['read', 'write', 'notify'],
             'value': None,
             'descriptors': [
                 Descriptor({
                     'uuid': '2901',
-                    'value': bytes("On / Off", 'utf-8')
+                    'value': bytes("Loop", 'utf-8')
                 }),
                 Descriptor({
                     'uuid': '2904',
@@ -33,14 +33,15 @@ class OnOffCharacteristic(Characteristic):
         self.updateValueCallback = None
 
         self.lampi_state = lampi_state
-        self.lampi_state.on('onOffChange', self.handle_on_off_change)
+        self.lampi_state.on('loopChange', self.handle_brightness_change)
 
 # region BLE Read/Write
     def onReadRequest(self, offset, callback):
         if offset:
             callback(Characteristic.RESULT_ATTR_NOT_LONG, None)
         else:
-            data = [0x01] if self.lampi_state.isOn else [0x00]
+            data = struct.pack("<B",
+                               int(self.lampi_state.brightness * 0xff))
             callback(Characteristic.RESULT_SUCCESS, data)
 
     def onWriteRequest(self, data, offset, withoutResponse, callback):
@@ -49,14 +50,16 @@ class OnOffCharacteristic(Characteristic):
         elif len(data) != 1:
             callback(Characteristic.RESULT_INVALID_ATTRIBUTE_LENGTH)
         else:
-
-            print(f'Writing on/off: {data}')
-            self.lampi_state.isOn = struct.unpack('?', data)[0]
+            new_brightness = data[0] / 0xff
+            print(f'New brightness: {new_brightness}')
+            self.lampi_state.brightness = new_brightness
             callback(Characteristic.RESULT_SUCCESS)
-# endregion
 
-    def handle_on_off_change(self, newValue):
-        print("Handling on/off change")
+    def handle_brightness_change(self, newValue):
+        print(f"Handling brightness change: {newValue}")
         if self.updateValueCallback:
-            data = data = [0x01] if self.lampi_state.isOn else [0x00]
+            data = struct.pack("<B",
+                               int(self.lampi_state.brightness * 0xff))
             self.updateValueCallback(data)
+
+# endregion
