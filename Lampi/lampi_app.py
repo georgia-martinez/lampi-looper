@@ -67,16 +67,6 @@ class BeatButton(Button):
 
 
 class MainScreen(Screen):
-    PLAY_PIN = 27 
-    CLEAR_PIN = 23 
-    NETWORK_PIN = 17
-
-    play_button_pressed = BooleanProperty(False)
-    clear_button_pressed = BooleanProperty(False)
-    network_button_pressed = BooleanProperty(False)
-
-    network_popup_open = BooleanProperty(False)
-
     def __init__(self, **kwargs):
         super(MainScreen, self).__init__(**kwargs)
 
@@ -84,9 +74,6 @@ class MainScreen(Screen):
         self.beats_per_measure = 4
 
         self.loop = [0 for _ in range(self.beats_per_measure ** 2)]
-
-        self.setup_face_buttons()
-        self.setup_network_popup()
 
         self.play_flag = False
         self.play_process = None
@@ -190,9 +177,76 @@ class MainScreen(Screen):
         self.client.publish(TOPIC_UI_UPDATE, json.dumps(msg).encode('utf-8'), qos=1)
 
     def ui_update_msg(self, loop, bpm):
-        return {"client": MQTT_CLIENT_ID, "loop": loop, "bpm": bpm}
+        return {"client": MQTT_CLIENT_ID, "loop": loop, "bpm": bpm} 
+
+    def toggle_play(self):
+        if self.play_flag:
+            os.kill(self.play_process.pid, signal.SIGTERM)
+            self.play_process.wait()
+            LampiMixer.lampi_driver.change_color(0, 0, 0)
+
+        else:
+            command = [
+                "python3", 
+                "/home/pi/lampi-looper/Lampi/playback.py", 
+                json.dumps(self.loop),
+                str(self.pause_duration)
+            ]
+            self.play_process = subprocess.Popen(command)
+
+        self.play_flag = not self.play_flag
+
+    def clear(self):
+        for btn in self.buttons:
+            btn.reset_color()
+        
+        self.reset_loop()
+
+
+class SettingsScreen(Screen):
+    def __init__(self, **kwargs):
+        super(SettingsScreen, self).__init__(**kwargs)
+
+        ip_label = Label(text=self.ip_address())
+        ip_label.color = (0, 0, 0, 1)
+
+        self.add_widget(ip_label)
+
+    def ip_address(self):
+        interface = "wlan0"
+        ipaddr = lampi_util.get_ip_address(interface)
+        deviceid = lampi_util.get_device_id()
+
+        return "{}: {}\nDeviceID: {}".format(interface, ipaddr, deviceid)
+
+
+class LampiApp(App):
+    PLAY_PIN = 27 
+    CLEAR_PIN = 23 
+    SETTINGS_PIN = 22 
+
+    play_button_pressed = BooleanProperty(False)
+    clear_button_pressed = BooleanProperty(False)
+    settings_button_pressed = BooleanProperty(False)
+
+    TOGGLE_SCREEN = True
+
+    def build(self):
+        self.sm = ScreenManager()
+
+        self.main_screen = MainScreen(name="main")
+        self.settings_screen = SettingsScreen(name="settings")
+
+        self.sm.add_widget(self.main_screen)
+        self.sm.add_widget(self.settings_screen)
+
+        self.setup_face_buttons()
+
+        return self.sm
 
     def setup_face_buttons(self):
+        Clock.schedule_interval(self._poll_GPIO, 0.05)
+
         self.pi = pigpio.pi()
 
         self.pi.set_mode(self.PLAY_PIN, pigpio.INPUT)
@@ -201,96 +255,16 @@ class MainScreen(Screen):
         self.pi.set_mode(self.CLEAR_PIN, pigpio.INPUT)
         self.pi.set_pull_up_down(self.CLEAR_PIN, pigpio.PUD_UP)
 
-        self.pi.set_mode(self.NETWORK_PIN, pigpio.INPUT)
-        self.pi.set_pull_up_down(self.NETWORK_PIN, pigpio.PUD_UP)  
+        self.pi.set_mode(self.SETTINGS_PIN, pigpio.INPUT)
+        self.pi.set_pull_up_down(self.SETTINGS_PIN, pigpio.PUD_UP)  
 
     def on_play_button_pressed(self, instance, value):
-        if value: 
-            if self.play_flag:
-                os.kill(self.play_process.pid, signal.SIGTERM)
-                self.play_process.wait()
-                LampiMixer.lampi_driver.change_color(0, 0, 0)
-
-            else:
-                command = [
-                    "python3", 
-                    "/home/pi/lampi-looper/Lampi/playback.py", 
-                    json.dumps(self.loop),
-                    str(self.pause_duration)
-                ]
-                self.play_process = subprocess.Popen(command)
-
-            self.play_flag = not self.play_flag
+        if value:
+            self.main_screen.toggle_play()
 
     def on_clear_button_pressed(self, instance, value):
-        if value:      
-            for btn in self.buttons:
-                btn.reset_color()
-            
-            self.reset_loop()
-
-    def setup_network_popup(self):
-        Clock.schedule_interval(self._poll_GPIO, 0.05)
-
-        self.network_popup = self.build_network_popup()
-        self.network_popup.bind(on_open=self.update_popup_ip_address)
-
-    def build_network_popup(self):
-        return Popup(title='Network Status',
-                     content=Label(text='IP ADDRESS WILL GO HERE'),
-                     size_hint=(1, 1), auto_dismiss=False)
-
-    def update_popup_ip_address(self, instance):
-        interface = "wlan0"
-        ipaddr = lampi_util.get_ip_address(interface)
-        deviceid = lampi_util.get_device_id()
-
-        msg = "{}: {}\nDeviceID: {}".format(interface, ipaddr, deviceid)
-        instance.content.text = msg
-
-    def on_network_button_pressed(self, instance, value):
         if value:
-            if not self.network_popup_open:
-                self.network_popup.open()
-                self.network_popup_open = True
-            else:
-                self.network_popup.dismiss()
-                self.network_popup_open = False
-
-    def _poll_GPIO(self, dt):
-        self.play_button_pressed = not self.pi.read(self.PLAY_PIN)       # button 1
-        self.clear_button_pressed = not self.pi.read(self.CLEAR_PIN)     # button 2
-        self.network_button_pressed = not self.pi.read(self.NETWORK_PIN) # button 4
-
-
-class SettingsScreen(Screen):
-    def __init__(self, **kwargs):
-        super(SettingsScreen, self).__init__(**kwargs)
-
-class LampiApp(App):
-
-    SETTINGS_PIN = 22 
-    settings_button_pressed = BooleanProperty(False)
-
-    TOGGLE_SCREEN = True
-
-    def build(self):
-        self.sm = ScreenManager()
-
-        main_screen = MainScreen(name="main")
-        settings_screen = SettingsScreen(name="settings")
-
-        self.sm.add_widget(main_screen)
-        self.sm.add_widget(settings_screen)
-
-        Clock.schedule_interval(self._poll_GPIO, 0.05)
-
-        self.pi = pigpio.pi()
-
-        self.pi.set_mode(self.SETTINGS_PIN, pigpio.INPUT)
-        self.pi.set_pull_up_down(self.SETTINGS_PIN, pigpio.PUD_UP)   
-
-        return self.sm
+            self.main_screen.clear()
 
     def on_settings_button_pressed(self, instance, value):
         if value:
@@ -302,7 +276,9 @@ class LampiApp(App):
             self.TOGGLE_SCREEN = not self.TOGGLE_SCREEN
 
     def _poll_GPIO(self, dt):
-        self.settings_button_pressed = not self.pi.read(self.SETTINGS_PIN)
+        self.play_button_pressed = not self.pi.read(self.PLAY_PIN)         # button 1
+        self.clear_button_pressed = not self.pi.read(self.CLEAR_PIN)       # button 2
+        self.settings_button_pressed = not self.pi.read(self.SETTINGS_PIN) # button 3
 
 if __name__ == "__main__":
     LampiApp().run()
