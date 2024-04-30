@@ -70,7 +70,7 @@ class MainScreen(Screen):
     def __init__(self, **kwargs):
         super(MainScreen, self).__init__(**kwargs)
 
-        self.pause_duration = self.set_pause_duration(100)
+        self.pause_duration = self.set_bpm(100)
         self.beats_per_measure = 4
 
         self.loop = [0 for _ in range(self.beats_per_measure ** 2)]
@@ -106,29 +106,8 @@ class MainScreen(Screen):
         self.update_buttons()
 
     def build(self):
-        Window.clearcolor = (1, 1, 1, 1)
-
         layout = BoxLayout(orientation="vertical", padding=5)
 
-        # Adding the bpm slider and label
-        self.bpm_slider = Slider(min=0, max=200, value=100, step=1, 
-                                 value_track=True, value_track_color=[0.5, 0.5, 0.5, 0.5])
-        self.bpm_slider.size_hint_y = None
-        self.bpm_slider.height = 50
-
-        self.bpm_label = Label()
-        self.bpm_label.text = f"BPM: {100}"
-        self.bpm_label.color = (0, 0, 0, 1)
-        self.set_pause_duration(100)
-
-        self.bpm_label.size_hint_y = None
-        self.bpm_label.height = 20
-        self.bpm_slider.bind(value=self.update_bpm_label)
-
-        # layout.add_widget(self.bpm_slider)
-        # layout.add_widget(self.bpm_label)
-
-        # Adding the button grid
         self.button_grid = GridLayout(cols=4, spacing=5)
         self.buttons = []
 
@@ -146,7 +125,7 @@ class MainScreen(Screen):
         self.loop = [0 for _ in range(16)]
         self.publish_state_change()
 
-    def set_pause_duration(self, bpm):
+    def set_bpm(self, bpm):
         self.bpm = bpm
         self.pause_duration = 0.25 * (60 / bpm)
 
@@ -154,25 +133,13 @@ class MainScreen(Screen):
         for i, btn in zip(self.loop, self.buttons):
             btn.set_color(i)
 
-    def update_bpm_label(self, instance, value):
-        self.update_bpm(value)
-
-    def update_bpm(self, value):
-        bpm = int(value)
-
-        self.bpm_label.text = f"BPM: {bpm}"
-        self.set_pause_duration(bpm)
-
-        self.publish_state_change()
-
     def on_beat_button_press(self, instance):
         instance.toggle_color()
         self.loop[instance.id] = instance.curr_color.id()
         self.publish_state_change()
 
     def publish_state_change(self):
-        bpm_val = ''.join(filter(str.isdigit, self.bpm_label.text))
-        msg = self.ui_update_msg(self.loop, bpm_val)        
+        msg = self.ui_update_msg(self.loop, self.bpm)        
 
         self.client.publish(TOPIC_UI_UPDATE, json.dumps(msg).encode('utf-8'), qos=1)
 
@@ -204,13 +171,44 @@ class MainScreen(Screen):
 
 
 class SettingsScreen(Screen):
-    def __init__(self, **kwargs):
+    def __init__(self, main_screen=None, **kwargs):
         super(SettingsScreen, self).__init__(**kwargs)
 
+        self.main_screen = main_screen
+
+        layout = BoxLayout(orientation="vertical", padding=5)
+
+        # Adding the bpm slider and label
+        self.bpm_slider = Slider(min=0, max=200, value=100, step=1, 
+                                 value_track=True, value_track_color=[0.5, 0.5, 0.5, 0.5])
+        self.bpm_slider.size_hint_y = None
+        self.bpm_slider.height = 50
+
+        self.bpm_label = Label()
+        self.bpm_label.text = f"BPM: {100}"
+        self.bpm_label.color = (0, 0, 0, 1)
+
+        self.bpm_label.size_hint_y = None
+        self.bpm_label.height = 20
+        self.bpm_slider.bind(value=self.update_bpm)
+
+        layout.add_widget(self.bpm_slider)
+        layout.add_widget(self.bpm_label)
+
+        # Adding network info
         ip_label = Label(text=self.ip_address())
         ip_label.color = (0, 0, 0, 1)
 
-        self.add_widget(ip_label)
+        layout.add_widget(ip_label)
+
+        self.add_widget(layout)
+
+    def update_bpm(self, instance, value):
+        bpm = int(value)
+        self.bpm_label.text = f"BPM: {bpm}"
+        
+        self.main_screen.set_bpm(bpm)
+        self.main_screen.publish_state_change()
 
     def ip_address(self):
         interface = "wlan0"
@@ -232,10 +230,12 @@ class LampiApp(App):
     TOGGLE_SCREEN = True
 
     def build(self):
+        Window.clearcolor = (1, 1, 1, 1)
+
         self.sm = ScreenManager()
 
         self.main_screen = MainScreen(name="main")
-        self.settings_screen = SettingsScreen(name="settings")
+        self.settings_screen = SettingsScreen(main_screen=self.main_screen, name="settings")
 
         self.sm.add_widget(self.main_screen)
         self.sm.add_widget(self.settings_screen)
