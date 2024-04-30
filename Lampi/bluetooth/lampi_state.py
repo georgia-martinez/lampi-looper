@@ -12,7 +12,6 @@ MQTT_BROKER_HOST = "localhost"
 MQTT_BROKER_PORT = 1883
 MQTT_BROKER_KEEP_ALIVE_SECS = 60
 
-
 def client_state_topic(client_id):
     return 'lamp/connection/{}/state'.format(client_id)
 
@@ -44,16 +43,21 @@ class LampiState():
 
         if func is None:
             return subscribe
-            
+
         subscribe(func)
 
     def emit(self, event, message):
         for callback in self.callbacks[event]:
             callback(message)
 
-    def set_bpm(self, newBpm):
-        if newBpm != self.bpm:
-            self.bpm = newBpm
+    def set_bpm(self, bpm):
+        if bpm != self.bpm:
+            self.bpm = bpm
+            self.publish_state_change()
+
+    def set_loop(self, loop):
+        if loop != self.bpm:
+            self.loop = loop
             self.publish_state_change()
 
     def on_mqtt_connect(self, client, userdata, flags, rc):
@@ -71,8 +75,9 @@ class LampiState():
                 self.bpm = new_state["bpm"]
                 self.emit("bpmChange", self.bpm)
 
-            # self.loop = new_state.get("loop", [0 for _ in range(16)])
-            # self.emit('loopChange', self.loop)
+            if new_state["loop"] != self.loop:
+                self.loop = new_state["loop"]
+                self.emit("loopChange", self.loop)
 
     def publish_state_change(self):
         config = {

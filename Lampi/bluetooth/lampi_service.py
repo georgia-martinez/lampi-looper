@@ -15,7 +15,7 @@ class LampiService(BlenoPrimaryService):
             'uuid': self.uuid,
             'characteristics': [
                 BpmCharacteristic(self.lampi_state),
-                # LoopCharacteristic(self.lampi_state),
+                LoopCharacteristic(self.lampi_state),
             ]
         })
         print("Started Lamp Service")

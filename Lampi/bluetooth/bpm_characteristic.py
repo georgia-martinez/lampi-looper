@@ -36,7 +36,7 @@ class BpmCharacteristic(Characteristic):
         self.updateValueCallback = None
 
         self.lampi_state = lampi_state
-        self.lampi_state.on('bpmChange', self.handle_bpm_change)
+        self.lampi_state.on("bpmChange", self.handle_bpm_change)
 
     def onReadRequest(self, offset, callback):
         if offset:
@@ -48,11 +48,13 @@ class BpmCharacteristic(Characteristic):
     def onWriteRequest(self, data, offset, withoutResponse, callback):
         if offset:
             callback(Characteristic.RESULT_ATTR_NOT_LONG)
+
         elif len(data) != 1:
             callback(Characteristic.RESULT_INVALID_ATTRIBUTE_LENGTH)
+
         else:
             new_bpm = data[0]
-            print(f'New BPM: {new_bpm}')
+            print(f"New BPM: {new_bpm}")
 
             self.lampi_state.set_bpm(new_bpm)
             callback(Characteristic.RESULT_SUCCESS)
@@ -60,5 +62,5 @@ class BpmCharacteristic(Characteristic):
     def handle_bpm_change(self, newValue):
         print(f"Handling bpm change: {newValue}")
         if self.updateValueCallback:
-            data = struct.pack("<B", int(self.lampi_state.bpm * 0xff))
+            data = struct.pack("<B", int(self.lampi_state.bpm * 255 / self.MAX_BPM))
             self.updateValueCallback(data)
