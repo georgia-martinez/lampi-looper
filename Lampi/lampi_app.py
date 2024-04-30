@@ -10,7 +10,6 @@ import time
 import signal
 import os
 
-from math import fabs
 from kivy.app import App
 from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.gridlayout import GridLayout
@@ -19,10 +18,16 @@ from kivy.uix.slider import Slider
 from kivy.uix.popup import Popup
 from kivy.uix.label import Label
 from kivy.properties import BooleanProperty
+from kivy.uix.screenmanager import ScreenManager, Screen
 from kivy.clock import Clock
+from kivy.core.window import Window
+
+from math import fabs
 from paho.mqtt.client import Client
 from lampi_mixer import LampiMixer
 from lampi_common import *
+
+MQTT_CLIENT_ID = "lampi_app"
 
 class BeatButton(Button):
 
@@ -60,10 +65,8 @@ class BeatButton(Button):
         self.background_color = new_color.value
         self.curr_color = new_color
 
-MQTT_CLIENT_ID = "lampi_app"
 
-class LampiApp(App):
-
+class MainScreen(Screen):
     PLAY_PIN = 27 
     CLEAR_PIN = 23 
     NETWORK_PIN = 17
@@ -75,7 +78,7 @@ class LampiApp(App):
     network_popup_open = BooleanProperty(False)
 
     def __init__(self, **kwargs):
-        super().__init__(**kwargs)
+        super(MainScreen, self).__init__(**kwargs)
 
         self.pause_duration = self.set_pause_duration(100)
         self.beats_per_measure = 4
@@ -87,6 +90,9 @@ class LampiApp(App):
 
         self.play_flag = False
         self.play_process = None
+
+        self.build()
+        self.client = self.create_client()
 
     def create_client(self):
         client = mqtt.Client(client_id=MQTT_CLIENT_ID)
@@ -113,23 +119,27 @@ class LampiApp(App):
         self.update_buttons()
 
     def build(self):
-        layout = BoxLayout(orientation="vertical")
+        Window.clearcolor = (1, 1, 1, 1)
+
+        layout = BoxLayout(orientation="vertical", padding=5)
 
         # Adding the bpm slider and label
-        self.bpm_slider = Slider(min=0, max=200, value=100, step=1)
+        self.bpm_slider = Slider(min=0, max=200, value=100, step=1, 
+                                 value_track=True, value_track_color=[0.5, 0.5, 0.5, 0.5])
         self.bpm_slider.size_hint_y = None
         self.bpm_slider.height = 50
 
         self.bpm_label = Label()
         self.bpm_label.text = f"BPM: {100}"
+        self.bpm_label.color = (0, 0, 0, 1)
         self.set_pause_duration(100)
 
         self.bpm_label.size_hint_y = None
         self.bpm_label.height = 20
         self.bpm_slider.bind(value=self.update_bpm_label)
 
-        layout.add_widget(self.bpm_slider)
-        layout.add_widget(self.bpm_label)
+        # layout.add_widget(self.bpm_slider)
+        # layout.add_widget(self.bpm_label)
 
         # Adding the button grid
         self.button_grid = GridLayout(cols=4, spacing=5)
@@ -143,10 +153,7 @@ class LampiApp(App):
             self.buttons.append(btn)
 
         layout.add_widget(self.button_grid)
-
-        self.client = self.create_client()
-
-        return layout
+        self.add_widget(layout)
 
     def reset_loop(self):
         self.loop = [0 for _ in range(16)]
@@ -255,5 +262,48 @@ class LampiApp(App):
         self.clear_button_pressed = not self.pi.read(self.CLEAR_PIN)     # button 2
         self.network_button_pressed = not self.pi.read(self.NETWORK_PIN) # button 4
 
+
+class SettingsScreen(Screen):
+    def __init__(self, **kwargs):
+        super(SettingsScreen, self).__init__(**kwargs)
+
+class LampiApp(App):
+
+    SETTINGS_PIN = 22 
+    settings_button_pressed = BooleanProperty(False)
+
+    TOGGLE_SCREEN = True
+
+    def build(self):
+        self.sm = ScreenManager()
+
+        main_screen = MainScreen(name="main")
+        settings_screen = SettingsScreen(name="settings")
+
+        self.sm.add_widget(main_screen)
+        self.sm.add_widget(settings_screen)
+
+        Clock.schedule_interval(self._poll_GPIO, 0.05)
+
+        self.pi = pigpio.pi()
+
+        self.pi.set_mode(self.SETTINGS_PIN, pigpio.INPUT)
+        self.pi.set_pull_up_down(self.SETTINGS_PIN, pigpio.PUD_UP)   
+
+        return self.sm
+
+    def on_settings_button_pressed(self, instance, value):
+        if value:
+            if self.TOGGLE_SCREEN:
+                self.sm.current = "settings"
+            else:
+                self.sm.current = "main"
+
+            self.TOGGLE_SCREEN = not self.TOGGLE_SCREEN
+
+    def _poll_GPIO(self, dt):
+        self.settings_button_pressed = not self.pi.read(self.SETTINGS_PIN)
+
 if __name__ == "__main__":
     LampiApp().run()
+    

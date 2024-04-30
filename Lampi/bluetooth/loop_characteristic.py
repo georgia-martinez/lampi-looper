@@ -49,5 +49,3 @@ class LoopCharacteristic(Characteristic):
         if self.updateValueCallback:
             data = struct.pack("<16B", *self.lampi_state.loop)
             self.updateValueCallback(data)
-
-# endregion

@@ -2,10 +2,10 @@ import paho.mqtt.client
 from enum import Enum
 
 class Color(Enum):
-    GRAY = (0.5, 0.5, 0.5, 1)
-    BLUE = (0, 0, 1, 1)
-    GREEN = (0, 1, 0, 1)
-    RED = (1, 0, 0, 1)
+    GRAY = (0.5, 0.5, 0.5, 0.4)
+    BLUE = (0, 0, 1, 0.7)
+    GREEN = (0, 1, 0, 0.7)
+    RED = (1, 0, 0, 0.7)
 
     def id(self):
         return list(Color).index(self)
