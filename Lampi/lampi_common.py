@@ -14,6 +14,30 @@ class Color(Enum):
     def get_color(cls, color_id):
         return list(cls)[color_id]
 
+
+class TimeSignature(Enum):
+    THREE_FOUR = (3, 4, "3/4")
+    FOUR_FOUR = (4, 4, "4/4")
+    FIVE_FOUR = (5, 4, "5/4")
+
+    def __init__(self, numerator, denominator, label):
+        self._numerator = numerator
+        self._denominator = denominator
+        self._label = label
+
+    @property
+    def numerator(self):
+        return self._numerator
+
+    @property
+    def denominator(self):
+        return self._denominator
+
+    @property
+    def label(self):
+        return self._label
+
+
 DEVICE_ID_FILENAME = '/sys/class/net/eth0/address'
 
 # MQTT Topic Names
