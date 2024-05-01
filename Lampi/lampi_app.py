@@ -1,10 +1,8 @@
 #!/usr/bin/env python3
 
-import platform
 import json
 import pigpio
 import lampi_util
-import paho.mqtt.client as mqtt
 import subprocess
 import time
 import signal
@@ -22,7 +20,6 @@ from kivy.uix.screenmanager import ScreenManager, Screen
 from kivy.clock import Clock
 from kivy.core.window import Window
 
-from paho.mqtt.client import Client
 from lampi_mixer import LampiMixer
 from lampi_common import *
 from main_screen import MainScreen

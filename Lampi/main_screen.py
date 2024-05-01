@@ -1,10 +1,10 @@
 import json
 import lampi_util
-import paho.mqtt.client as mqtt
 import subprocess
 import time
 import signal
 import os
+import shelve
 
 from kivy.app import App
 from kivy.uix.boxlayout import BoxLayout
@@ -63,38 +63,24 @@ class MainScreen(Screen):
     def __init__(self, **kwargs):
         super(MainScreen, self).__init__(**kwargs)
 
-        self.pause_duration = self.set_bpm(100)
+        self.load_db()
+
         self.time_signature = TimeSignature.FOUR_FOUR
+        self.set_bpm(100)
 
         self.play_flag = False
         self.play_process = None
 
         self.build()
-        self.client = self.create_client()
 
-    def create_client(self):
-        client = mqtt.Client(client_id=MQTT_CLIENT_ID)
-        client.enable_logger()
-        client.connect(MQTT_BROKER_HOST, port=MQTT_BROKER_PORT, keepalive=MQTT_BROKER_KEEP_ALIVE_SECS)
-        client.on_connect = self.on_connect
-        client.message_callback_add(TOPIC_UI_UPDATE, self.update_ui)
-        client.loop_start()
+    def load_db(self):
+        self.db = shelve.open("lampi_state", writeback=True)
 
-        return client
+        if "loop" in self.db:
+            self.loop = self.db["loop"]
 
-    def on_connect(self, client, userdata, rc, unknown):
-        self.client.subscribe(TOPIC_UI_UPDATE, qos=0)
-
-    def update_ui(self, client, userdata, msg):
-        msg = json.loads(msg.payload.decode('utf-8'))
-
-        if msg["client"] == MQTT_CLIENT_ID:
-            return
-
-        self.loop = msg["loop"]
-        # self.update_bpm(msg["bpm"])
-
-        self.update_buttons()
+        if "bpm" in self.db:
+            self.set_bpm(self.db["bpm"])
 
     def build(self):
         self.clear_widgets()
@@ -121,7 +107,7 @@ class MainScreen(Screen):
         self.loop = [0 for _ in range(self.time_signature.numerator * self.time_signature.denominator)]
         
         if publish:
-            self.publish_state_change()
+            self.save_config_to_db()
 
     def set_bpm(self, bpm):
         self.bpm = bpm
@@ -142,15 +128,13 @@ class MainScreen(Screen):
     def on_beat_button_press(self, instance):
         instance.toggle_color()
         self.loop[instance.id] = instance.curr_color.id()
-        self.publish_state_change()
+        self.save_config_to_db()
 
-    def publish_state_change(self):
-        msg = self.ui_update_msg(self.loop, self.bpm)        
+    def save_config_to_db(self):
+        self.db["loop"] = self.loop
+        self.db["bpm"] = self.bpm
 
-        self.client.publish(TOPIC_UI_UPDATE, json.dumps(msg).encode('utf-8'), qos=1)
-
-    def ui_update_msg(self, loop, bpm):
-        return {"client": MQTT_CLIENT_ID, "loop": loop, "bpm": bpm} 
+        self.db.sync()
 
     def toggle_play(self):
         if self.play_flag:
