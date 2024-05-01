@@ -67,6 +67,7 @@ class MainScreen(Screen):
 
         self.time_signature = TimeSignature.FOUR_FOUR
         self.set_bpm(100)
+        self.swung = False
 
         self.play_flag = False
         self.play_process = None
@@ -147,7 +148,8 @@ class MainScreen(Screen):
                 "python3", 
                 "/home/pi/lampi-looper/Lampi/playback.py", 
                 json.dumps(self.loop),
-                str(self.pause_duration)
+                str(self.pause_duration),
+                str(int(self.swung))
             ]
             self.play_process = subprocess.Popen(command)
 

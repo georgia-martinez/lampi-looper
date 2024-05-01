@@ -10,6 +10,7 @@ from kivy.uix.screenmanager import Screen
 from kivy.uix.checkbox import CheckBox
 from lampi_common import *
 
+BLACK = (0, 0, 0, 1)
 
 class SettingsScreen(Screen):
     def __init__(self, main_screen=None, **kwargs):
@@ -27,7 +28,7 @@ class SettingsScreen(Screen):
 
         self.bpm_label = Label()
         self.bpm_label.text = f"BPM: {100}"
-        self.bpm_label.color = (0, 0, 0, 1)
+        self.bpm_label.color = BLACK
 
         self.bpm_label.size_hint_y = None
         self.bpm_label.height = 20
@@ -37,30 +38,35 @@ class SettingsScreen(Screen):
         layout.add_widget(self.bpm_label)
 
         # Time signatures
-        time_sigs_layout = GridLayout(cols=2, rows=3, spacing=5)
+        grid_layout = GridLayout(cols=2, rows=4, spacing=5)
         self.time_sigs_map = {}
 
         for time_sig in list(TimeSignature):
-            text = Label(text=time_sig.label)
-            text.color = (0, 0, 0, 1)
+            text = Label(text=time_sig.label, color=BLACK)
 
-            checkbox = CheckBox()
-            checkbox.color = (0, 0, 0, 1)
-            checkbox.group = "group"
+            checkbox = CheckBox(group="group", color=BLACK)
             checkbox.bind(active=self.update_time_signature)
 
             self.time_sigs_map[time_sig] = checkbox
 
-            time_sigs_layout.add_widget(text)
-            time_sigs_layout.add_widget(checkbox)
+            grid_layout.add_widget(text)
+            grid_layout.add_widget(checkbox)
 
         self.time_sigs_map[TimeSignature.FOUR_FOUR].active = True
 
-        layout.add_widget(time_sigs_layout)
+        swing_text = Label(text="Swing", color=BLACK)
+        
+        swing_checkbox = CheckBox(color=BLACK)
+        swing_checkbox.bind(active=self.toggle_swing)
+
+        grid_layout.add_widget(swing_text)
+        grid_layout.add_widget(swing_checkbox)
+
+        layout.add_widget(grid_layout)
 
         # Network info
         ip_label = Label(text=self.ip_address())
-        ip_label.color = (0, 0, 0, 1)
+        ip_label.color = BLACK
 
         layout.add_widget(ip_label)
 
@@ -71,7 +77,6 @@ class SettingsScreen(Screen):
         self.bpm_label.text = f"BPM: {bpm}"
         
         self.main_screen.set_bpm(bpm)
-        self.main_screen.publish_state_change()
 
     def update_time_signature(self, checkbox, value):
         if value:
@@ -82,6 +87,8 @@ class SettingsScreen(Screen):
                     self.main_screen.set_time_signature(time_sig)
                     return
 
+    def toggle_swing(self, checkbox, value):
+        self.main_screen.swung = not self.main_screen.swung
 
     def ip_address(self):
         interface = "wlan0"

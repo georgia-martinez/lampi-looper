@@ -18,6 +18,10 @@ if __name__ == "__main__":
 
     loop = json.loads(sys.argv[1])
     pause_duration = float(sys.argv[2])
+    swung = bool(int(sys.argv[3]))
+
+    col_num = 1
+    swing_ratio = 0.3
 
     while True:
         for beat in range(len(loop)):
@@ -28,4 +32,12 @@ if __name__ == "__main__":
             
             update_led(sound_id)
 
-            time.sleep(pause_duration)
+            if swung and col_num == 3:
+                time.sleep(pause_duration * swing_ratio)
+            else:
+                time.sleep(pause_duration)
+
+            col_num += 1
+
+            if col_num > 4:
+                col_num = 1
