@@ -6,6 +6,7 @@ PIN_G = 26
 PIN_B = 13
 PINS = [PIN_R, PIN_G, PIN_B]
 
+
 class LampiDriver(object):
     def __init__(self):
         self._gpio = pigpio.pi()

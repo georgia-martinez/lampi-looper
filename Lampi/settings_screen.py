@@ -12,6 +12,7 @@ from lampi_common import *
 
 BLACK = (0, 0, 0, 1)
 
+
 class SettingsScreen(Screen):
     def __init__(self, main_screen=None, **kwargs):
         super(SettingsScreen, self).__init__(**kwargs)
@@ -21,8 +22,9 @@ class SettingsScreen(Screen):
         layout = BoxLayout(orientation="vertical", padding=5)
 
         # BPM slider and label
-        self.bpm_slider = Slider(min=0, max=200, value=100, step=1, 
-                                 value_track=True, value_track_color=[0.5, 0.5, 0.5, 0.5])
+        self.bpm_slider = Slider(min=0, max=200, value=100, step=1,
+                                 value_track=True,
+                                 value_track_color=[0.5, 0.5, 0.5, 0.5])
         self.bpm_slider.size_hint_y = None
         self.bpm_slider.height = 50
 
@@ -55,7 +57,7 @@ class SettingsScreen(Screen):
         self.time_sigs_map[TimeSignature.FOUR_FOUR].active = True
 
         swing_text = Label(text="Swing", color=BLACK)
-        
+
         swing_checkbox = CheckBox(color=BLACK)
         swing_checkbox.bind(active=self.toggle_swing)
 
@@ -75,7 +77,7 @@ class SettingsScreen(Screen):
     def update_bpm(self, instance, value):
         bpm = int(value)
         self.bpm_label.text = f"BPM: {bpm}"
-        
+
         self.main_screen.set_bpm(bpm)
 
     def update_time_signature(self, checkbox, value):

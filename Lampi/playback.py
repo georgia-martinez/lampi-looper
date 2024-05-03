@@ -5,6 +5,7 @@ import sys
 from lampi_mixer import LampiMixer
 from lampi_common import *
 
+
 def update_led(sound_id):
     if sound_id == 0:
         LampiMixer.lampi_driver.change_color(0, 0, 0)
@@ -13,6 +14,7 @@ def update_led(sound_id):
         r, g, b, _ = color.value
 
         LampiMixer.lampi_driver.change_color(r, g, b)
+
 
 if __name__ == "__main__":
 
@@ -29,7 +31,7 @@ if __name__ == "__main__":
 
             if loop[beat] != 0:
                 LampiMixer.sound_map[sound_id].play()
-            
+
             update_led(sound_id)
 
             if swung and col_num == 3:

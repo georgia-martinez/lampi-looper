@@ -22,6 +22,7 @@ from lampi_common import *
 
 MQTT_CLIENT_ID = "lampi_app"
 
+
 class BeatButton(Button):
 
     def __init__(self, id, **kwargs):
@@ -90,14 +91,15 @@ class MainScreen(Screen):
         layout = BoxLayout(orientation="vertical", padding=5)
 
         self.button_grid = GridLayout(rows=self.time_signature.numerator,
-                                      cols=self.time_signature.denominator, 
+                                      cols=self.time_signature.denominator,
                                       spacing=5)
         self.buttons = []
 
-        for i in range(self.time_signature.numerator * self.time_signature.denominator):
+        for i in range(self.time_signature.numerator *
+                       self.time_signature.denominator):
             btn = BeatButton(i)
             btn.bind(on_press=self.on_beat_button_press)
-            
+
             self.button_grid.add_widget(btn)
             self.buttons.append(btn)
 
@@ -105,8 +107,11 @@ class MainScreen(Screen):
         self.add_widget(layout)
 
     def reset_loop(self, publish=True):
-        self.loop = [0 for _ in range(self.time_signature.numerator * self.time_signature.denominator)]
-        
+        self.loop = [
+            0 for _ in range(
+                self.time_signature.numerator *
+                self.time_signature.denominator)]
+
         if publish:
             self.save_config_to_db()
 
@@ -145,8 +150,8 @@ class MainScreen(Screen):
 
         else:
             command = [
-                "python3", 
-                "/home/pi/lampi-looper/Lampi/playback.py", 
+                "python3",
+                "/home/pi/lampi-looper/Lampi/playback.py",
                 json.dumps(self.loop),
                 str(self.pause_duration),
                 str(int(self.swung))
@@ -158,5 +163,5 @@ class MainScreen(Screen):
     def clear(self):
         for btn in self.buttons:
             btn.reset_color()
-        
+
         self.reset_loop()

@@ -27,9 +27,9 @@ from settings_screen import SettingsScreen
 
 
 class LampiApp(App):
-    PLAY_PIN = 27 
-    CLEAR_PIN = 23 
-    SETTINGS_PIN = 22 
+    PLAY_PIN = 27
+    CLEAR_PIN = 23
+    SETTINGS_PIN = 22
 
     play_button_pressed = BooleanProperty(False)
     clear_button_pressed = BooleanProperty(False)
@@ -43,7 +43,8 @@ class LampiApp(App):
         self.sm = ScreenManager()
 
         self.main_screen = MainScreen(name="main")
-        self.settings_screen = SettingsScreen(main_screen=self.main_screen, name="settings")
+        self.settings_screen = SettingsScreen(
+            main_screen=self.main_screen, name="settings")
 
         self.sm.add_widget(self.main_screen)
         self.sm.add_widget(self.settings_screen)
@@ -58,13 +59,13 @@ class LampiApp(App):
         self.pi = pigpio.pi()
 
         self.pi.set_mode(self.PLAY_PIN, pigpio.INPUT)
-        self.pi.set_pull_up_down(self.PLAY_PIN, pigpio.PUD_UP)        
+        self.pi.set_pull_up_down(self.PLAY_PIN, pigpio.PUD_UP)
 
         self.pi.set_mode(self.CLEAR_PIN, pigpio.INPUT)
         self.pi.set_pull_up_down(self.CLEAR_PIN, pigpio.PUD_UP)
 
         self.pi.set_mode(self.SETTINGS_PIN, pigpio.INPUT)
-        self.pi.set_pull_up_down(self.SETTINGS_PIN, pigpio.PUD_UP)  
+        self.pi.set_pull_up_down(self.SETTINGS_PIN, pigpio.PUD_UP)
 
     def on_play_button_pressed(self, instance, value):
         if value:
@@ -84,10 +85,15 @@ class LampiApp(App):
             self.TOGGLE_SCREEN = not self.TOGGLE_SCREEN
 
     def _poll_GPIO(self, dt):
-        self.play_button_pressed = not self.pi.read(self.PLAY_PIN)         # button 1
-        self.clear_button_pressed = not self.pi.read(self.CLEAR_PIN)       # button 2
-        self.settings_button_pressed = not self.pi.read(self.SETTINGS_PIN) # button 3
+        self.play_button_pressed = not self.pi.read(
+            self.PLAY_PIN)
+
+        self.clear_button_pressed = not self.pi.read(
+            self.CLEAR_PIN)
+
+        self.settings_button_pressed = not self.pi.read(
+            self.SETTINGS_PIN)
+
 
 if __name__ == "__main__":
     LampiApp().run()
-    
